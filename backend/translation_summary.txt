@@ -1,0 +1,5 @@
+Résumé des constatations :
+
+1. Le `AuthController` gère l'authentification des administrateurs, y compris les fonctionnalités de connexion, de déconnexion et de changement de mot de passe.
+2. Le middleware `AdminAuth` vérifie si l'utilisateur est authentifié, s'il est un administrateur et s'il est actif.
+3. Le fichier `config/auth.php` est correctement configuré pour l'authentification des administrateurs en utilisant le pilote Sanctum.

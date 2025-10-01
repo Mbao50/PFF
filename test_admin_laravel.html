@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Interface Admin Laravel - SAMAFOOT</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; max-height: 300px; }
+        .loading { color: #007bff; }
+        .link { color: #007bff; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Test Interface Admin Laravel - SAMAFOOT</h1>
+    
+    <div class="test-section">
+        <h3>1. Test de connexion au serveur Laravel</h3>
+        <button onclick="testLaravelServer()">Tester le serveur Laravel</button>
+        <div id="laravel-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test de la page de connexion admin</h3>
+        <button onclick="testAdminLoginPage()">Tester la page de connexion</button>
+        <div id="login-page-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test de l'API Laravel (pour comparaison)</h3>
+        <button onclick="testLaravelAPI()">Tester l'API Laravel</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Liens directs vers l'interface admin</h3>
+        <div>
+            <p><a href="http://127.0.0.1:8000/admin/login" target="_blank" class="link">🔗 Page de connexion admin</a></p>
+            <p><a href="http://127.0.0.1:8000/admin/dashboard" target="_blank" class="link">🔗 Tableau de bord admin</a></p>
+            <p><a href="http://127.0.0.1:8000/admin/articles" target="_blank" class="link">🔗 Gestion des articles</a></p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Instructions de test</h3>
+        <div class="info">
+            <h4>Pour tester l'interface admin Laravel :</h4>
+            <ol>
+                <li><strong>Démarrer le serveur :</strong> <code>cd backend && php artisan serve</code></li>
+                <li><strong>Aller sur :</strong> <a href="http://127.0.0.1:8000/admin/login" target="_blank">http://127.0.0.1:8000/admin/login</a></li>
+                <li><strong>Se connecter avec :</strong>
+                    <ul>
+                        <li>Email: <code>admin@samafoot.sn</code></li>
+                        <li>Mot de passe: <code>admin123</code></li>
+                    </ul>
+                </li>
+                <li><strong>Tester les fonctionnalités :</strong>
+                    <ul>
+                        <li>Tableau de bord avec statistiques</li>
+                        <li>Créer un nouvel article</li>
+                        <li>Modifier un article existant</li>
+                        <li>Publier/Dépublier un article</li>
+                        <li>Supprimer un article</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const LARAVEL_BASE = 'http://127.0.0.1:8000';
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<div class="loading">⏳ Chargement...</div>';
+        }
+
+        async function testLaravelServer() {
+            showLoading('laravel-result');
+            try {
+                const response = await fetch(`${LARAVEL_BASE}/`);
+                if (response.ok) {
+                    showResult('laravel-result', '✅ Serveur Laravel accessible - Page d\'accueil chargée', 'success');
+                } else {
+                    showResult('laravel-result', `❌ Erreur serveur Laravel: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult('laravel-result', `❌ Impossible de se connecter au serveur Laravel: ${error.message}<br><br>Vérifiez que le serveur Laravel est démarré:<br><code>cd backend && php artisan serve</code>`, 'error');
+            }
+        }
+
+        async function testAdminLoginPage() {
+            showLoading('login-page-result');
+            try {
+                const response = await fetch(`${LARAVEL_BASE}/admin/login`);
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.includes('Espace Administration SAMAFOOT')) {
+                        showResult('login-page-result', '✅ Page de connexion admin accessible et fonctionnelle', 'success');
+                    } else {
+                        showResult('login-page-result', '⚠️ Page accessible mais contenu inattendu', 'error');
+                    }
+                } else {
+                    showResult('login-page-result', `❌ Erreur page de connexion: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult('login-page-result', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLaravelAPI() {
+            showLoading('api-result');
+            try {
+                const response = await fetch(`${LARAVEL_BASE}/api/v1/clubs`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('api-result', `✅ API Laravel fonctionnelle - ${data.data?.length || 0} clubs trouvés<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    showResult('api-result', `❌ Erreur API Laravel: ${data.message || 'Erreur inconnue'}<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                showResult('api-result', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        // Test automatique au chargement
+        window.onload = function() {
+            testLaravelServer();
+        };
+    </script>
+</body>
+</html>

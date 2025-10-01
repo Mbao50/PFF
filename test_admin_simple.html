@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin SAMAFOOT</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Admin SAMAFOOT</h1>
+    
+    <div class="test-section">
+        <h3>1. Test de connexion API</h3>
+        <button onclick="testApiConnection()">Tester la connexion API</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test d'authentification admin</h3>
+        <button onclick="testAdminLogin()">Tester la connexion admin</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test CRUD Articles</h3>
+        <button onclick="testCreateArticle()">Créer un article</button>
+        <button onclick="testGetArticles()">Récupérer les articles</button>
+        <div id="articles-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Test CRUD Classements</h3>
+        <button onclick="testCreateStanding()">Créer un classement</button>
+        <button onclick="testGetStandings()">Récupérer les classements</button>
+        <div id="standings-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api/v1';
+        let adminToken = null;
+
+        async function testApiConnection() {
+            const resultDiv = document.getElementById('api-result');
+            try {
+                const response = await fetch(`${API_BASE}/clubs`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ API accessible - ${data.data?.length || 0} clubs trouvés</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur API: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdminLogin() {
+            const resultDiv = document.getElementById('login-result');
+            try {
+                const response = await fetch(`${API_BASE}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@samafoot.sn',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    adminToken = data.token;
+                    resultDiv.innerHTML = `<div class="success">✅ Connexion admin réussie - Token reçu</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Erreur de connexion: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testCreateArticle() {
+            const resultDiv = document.getElementById('articles-result');
+            if (!adminToken) {
+                resultDiv.innerHTML = `<div class="error">❌ Veuillez d'abord vous connecter</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/articles`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Article Admin',
+                        content: 'Ceci est un article de test créé via l\'interface admin.',
+                        author: 'Admin Test',
+                        category: 'news',
+                        is_published: true
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Article créé avec succès</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Erreur création article: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetArticles() {
+            const resultDiv = document.getElementById('articles-result');
+            try {
+                const response = await fetch(`${API_BASE}/articles`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ Articles récupérés - ${data.data?.length || 0} articles</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testCreateStanding() {
+            const resultDiv = document.getElementById('standings-result');
+            if (!adminToken) {
+                resultDiv.innerHTML = `<div class="error">❌ Veuillez d'abord vous connecter</div>`;
+                return;
+            }
+
+            try {
+                // D'abord, récupérer un club
+                const clubsResponse = await fetch(`${API_BASE}/clubs`);
+                const clubsData = await clubsResponse.json();
+                
+                if (!clubsData.data || clubsData.data.length === 0) {
+                    resultDiv.innerHTML = `<div class="error">❌ Aucun club trouvé pour créer un classement</div>`;
+                    return;
+                }
+
+                const clubId = clubsData.data[0].id;
+
+                const response = await fetch(`${API_BASE}/admin/standings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        club_id: clubId,
+                        position: 1,
+                        matches_played: 5,
+                        wins: 3,
+                        draws: 1,
+                        losses: 1,
+                        goals_for: 8,
+                        goals_against: 3,
+                        points: 10,
+                        competition: 'Ligue 1'
+                    })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Classement créé avec succès</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Erreur création classement: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetStandings() {
+            const resultDiv = document.getElementById('standings-result');
+            try {
+                const response = await fetch(`${API_BASE}/standings`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ Classements récupérés - ${data.data?.length || 0} entrées</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

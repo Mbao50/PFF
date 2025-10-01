@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Admin SAMAFOOT</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; max-height: 300px; }
+        .loading { color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Admin SAMAFOOT</h1>
+    
+    <div class="test-section">
+        <h3>1. Test de connexion au serveur</h3>
+        <button onclick="testServerConnection()">Tester la connexion serveur</button>
+        <div id="server-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test API Clubs (sans auth)</h3>
+        <button onclick="testClubsAPI()">Tester l'API Clubs</button>
+        <div id="clubs-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test authentification admin</h3>
+        <button onclick="testAdminAuth()">Tester la connexion admin</button>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Test création article (avec auth)</h3>
+        <button onclick="testCreateArticle()">Créer un article test</button>
+        <div id="article-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Test récupération articles</h3>
+        <button onclick="testGetArticles()">Récupérer les articles</button>
+        <div id="articles-list-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api/v1';
+        let adminToken = null;
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<div class="loading">⏳ Chargement...</div>';
+        }
+
+        async function testServerConnection() {
+            showLoading('server-result');
+            try {
+                const response = await fetch(`${API_BASE}/clubs`);
+                if (response.ok) {
+                    showResult('server-result', '✅ Serveur accessible - API fonctionne', 'success');
+                } else {
+                    showResult('server-result', `❌ Erreur serveur: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult('server-result', `❌ Impossible de se connecter au serveur: ${error.message}<br><br>Vérifiez que le serveur Laravel est démarré:<br><code>cd backend && php artisan serve</code>`, 'error');
+            }
+        }
+
+        async function testClubsAPI() {
+            showLoading('clubs-result');
+            try {
+                const response = await fetch(`${API_BASE}/clubs`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('clubs-result', `✅ API Clubs fonctionne - ${data.data?.length || 0} clubs trouvés<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    showResult('clubs-result', `❌ Erreur API: ${data.message || 'Erreur inconnue'}<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                showResult('clubs-result', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAdminAuth() {
+            showLoading('auth-result');
+            try {
+                const response = await fetch(`${API_BASE}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@samafoot.sn',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    adminToken = data.token;
+                    showResult('auth-result', `✅ Connexion admin réussie<br>Token reçu: ${data.token.substring(0, 20)}...<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    showResult('auth-result', `❌ Erreur de connexion: ${data.message}<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                showResult('auth-result', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateArticle() {
+            if (!adminToken) {
+                showResult('article-result', '❌ Veuillez d\'abord vous connecter (étape 3)', 'error');
+                return;
+            }
+
+            showLoading('article-result');
+            try {
+                const response = await fetch(`${API_BASE}/admin/articles`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        title: 'Article Test Admin',
+                        content: 'Ceci est un article de test créé via l\'interface admin pour vérifier que le système fonctionne.',
+                        author: 'Admin Test',
+                        category: 'news',
+                        is_published: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('article-result', `✅ Article créé avec succès<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    showResult('article-result', `❌ Erreur création article: ${data.message}<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                showResult('article-result', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetArticles() {
+            showLoading('articles-list-result');
+            try {
+                const response = await fetch(`${API_BASE}/articles`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('articles-list-result', `✅ Articles récupérés - ${data.data?.length || 0} articles<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    showResult('articles-list-result', `❌ Erreur récupération articles: ${data.message}<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                showResult('articles-list-result', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        // Test automatique au chargement
+        window.onload = function() {
+            testServerConnection();
+        };
+    </script>
+</body>
+</html>

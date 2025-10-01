@@ -1,0 +1,65 @@
+# Tests de l'API d'administration SAMAFOOT
+@baseUrl = http://localhost:8000/api
+
+### 1. Connexion du Super Admin
+POST {{baseUrl}}/v1/auth/admin/login
+Content-Type: application/json
+
+{
+    "email": "admin@samafoot.sn",
+    "password": "admin123"
+}
+
+### 2. Connexion de l'Editor
+POST {{baseUrl}}/v1/auth/admin/login
+Content-Type: application/json
+
+{
+    "email": "editor@samafoot.sn",
+    "password": "editor123"
+}
+
+### 3. Connexion du Manager
+POST {{baseUrl}}/v1/auth/admin/login
+Content-Type: application/json
+
+{
+    "email": "manager@samafoot.sn",
+    "password": "manager123"
+}
+
+### 4. Récupérer les informations du profil (après connexion)
+GET {{baseUrl}}/v1/auth/admin/me
+Authorization: Bearer {{token}}
+
+### 5. Changer le mot de passe
+POST {{baseUrl}}/v1/auth/admin/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "current_password": "admin123",
+    "new_password": "newpassword123",
+    "new_password_confirmation": "newpassword123"
+}
+
+### 6. Créer un nouvel administrateur (Super Admin seulement)
+POST {{baseUrl}}/v1/auth/admin/create
+Authorization: Bearer {{super_admin_token}}
+Content-Type: application/json
+
+{
+    "name": "Nouvel Admin Test",
+    "email": "test@samafoot.sn",
+    "password": "test123",
+    "password_confirmation": "test123",
+    "role": "admin"
+}
+
+### 7. Lister tous les administrateurs (Super Admin seulement)
+GET {{baseUrl}}/v1/auth/admin/list
+Authorization: Bearer {{super_admin_token}}
+
+### 8. Déconnexion
+POST {{baseUrl}}/v1/auth/admin/logout
+Authorization: Bearer {{token}}

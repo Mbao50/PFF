@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { Club, Player, Match, Article, StandingEntry } from '../types';
 import { matches, clubs, players, generateStandings, articles } from '../data/mockData';
-import { getToken } from './AuthService';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1'; // Adjusted to include /v1
 
@@ -108,12 +107,7 @@ class ApiService {
   }
 
   async createArticle(data: Omit<Article, 'id'>): Promise<Article> {
-    const response = await this.api.post('/admin/articles', data,{
-      headers: {
-        'Authorization': `Bearer ${getToken()}`,
-        'Accept': 'application/json',
-      },
-    });
+    const response = await this.api.post('/admin/articles', data);
     return response.data.data;
   }
 

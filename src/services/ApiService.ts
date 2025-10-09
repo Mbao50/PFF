@@ -76,7 +76,24 @@ class ApiService {
   async getPlayers(): Promise<Player[]> {
     try {
       const response = await this.api.get('/admin/players');
-      return response.data.data || [];
+      // Transform snake_case to camelCase
+      const players = response.data.data || [];
+      return players.map((player: any) => ({
+        id: player.id,
+        name: player.name,
+        position: player.position,
+        birthdate: player.birthdate,
+        nationality: player.nationality,
+        clubId: player.club_id,
+        image: player.image,
+        height: player.height,
+        weight: player.weight,
+        appearances: player.appearances,
+        goals: player.goals,
+        assists: player.assists,
+        yellowCards: player.yellow_cards,
+        redCards: player.red_cards,
+      }));
     } catch (error) {
       console.warn('Failed to fetch players from API:', error);
       // Only fallback to mock data if not authenticated (for public views)
@@ -90,13 +107,79 @@ class ApiService {
   }
 
   async createPlayer(data: Omit<Player, 'id'>): Promise<Player> {
-    const response = await this.api.post('/admin/players', data);
-    return response.data.data;
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      name: data.name,
+      position: data.position,
+      birthdate: data.birthdate,
+      nationality: data.nationality,
+      club_id: data.clubId,
+      image: data.image,
+      height: data.height,
+      weight: data.weight,
+      appearances: data.appearances,
+      goals: data.goals,
+      assists: data.assists,
+      yellow_cards: data.yellowCards,
+      red_cards: data.redCards,
+    };
+    const response = await this.api.post('/admin/players', backendData);
+    // Transform response back to camelCase
+    const player = response.data.data;
+    return {
+      id: player.id,
+      name: player.name,
+      position: player.position,
+      birthdate: player.birthdate,
+      nationality: player.nationality,
+      clubId: player.club_id,
+      image: player.image,
+      height: player.height,
+      weight: player.weight,
+      appearances: player.appearances,
+      goals: player.goals,
+      assists: player.assists,
+      yellowCards: player.yellow_cards,
+      redCards: player.red_cards,
+    };
   }
 
   async updatePlayer(id: string, data: Partial<Player>): Promise<Player> {
-    const response = await this.api.put(`/admin/players/${id}`, data);
-    return response.data.data;
+    // Convert camelCase to snake_case for backend
+    const backendData: any = {};
+    if (data.name !== undefined) backendData.name = data.name;
+    if (data.position !== undefined) backendData.position = data.position;
+    if (data.birthdate !== undefined) backendData.birthdate = data.birthdate;
+    if (data.nationality !== undefined) backendData.nationality = data.nationality;
+    if (data.clubId !== undefined) backendData.club_id = data.clubId;
+    if (data.image !== undefined) backendData.image = data.image;
+    if (data.height !== undefined) backendData.height = data.height;
+    if (data.weight !== undefined) backendData.weight = data.weight;
+    if (data.appearances !== undefined) backendData.appearances = data.appearances;
+    if (data.goals !== undefined) backendData.goals = data.goals;
+    if (data.assists !== undefined) backendData.assists = data.assists;
+    if (data.yellowCards !== undefined) backendData.yellow_cards = data.yellowCards;
+    if (data.redCards !== undefined) backendData.red_cards = data.redCards;
+
+    const response = await this.api.put(`/admin/players/${id}`, backendData);
+    // Transform response back to camelCase
+    const player = response.data.data;
+    return {
+      id: player.id,
+      name: player.name,
+      position: player.position,
+      birthdate: player.birthdate,
+      nationality: player.nationality,
+      clubId: player.club_id,
+      image: player.image,
+      height: player.height,
+      weight: player.weight,
+      appearances: player.appearances,
+      goals: player.goals,
+      assists: player.assists,
+      yellowCards: player.yellow_cards,
+      redCards: player.red_cards,
+    };
   }
 
   async deletePlayer(id: string): Promise<void> {

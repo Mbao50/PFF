@@ -7,15 +7,15 @@ interface PlayerFormData {
   position: string;
   birthdate: string;
   nationality: string;
-  club_id: string;
+  clubId: string;
   image: string;
   height: string;
   weight: string;
   appearances: number;
   goals: number;
   assists: number;
-  yellow_cards: number;
-  red_cards: number;
+  yellowCards: number;
+  redCards: number;
 }
 
 const PlayerManagement: React.FC = () => {
@@ -24,20 +24,22 @@ const PlayerManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]> | null>(null);
   const [formData, setFormData] = useState<PlayerFormData>({
     name: '',
     position: '',
     birthdate: '',
     nationality: '',
-    club_id: '',
+    clubId: '',
     image: '',
     height: '',
     weight: '',
     appearances: 0,
     goals: 0,
     assists: 0,
-    yellow_cards: 0,
-    red_cards: 0,
+    yellowCards: 0,
+    redCards: 0,
   });
 
   useEffect(() => {
@@ -62,6 +64,9 @@ const PlayerManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setValidationErrors(null);
+
     try {
       if (editingPlayer) {
         await ApiService.updatePlayer(editingPlayer.id, formData);
@@ -72,8 +77,16 @@ const PlayerManagement: React.FC = () => {
       setEditingPlayer(null);
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error);
+
+      // Handle validation errors
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        setValidationErrors(error.response.data.errors);
+        setError('Erreurs de validation. Veuillez corriger les champs ci-dessous.');
+      } else {
+        setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+      }
     }
   };
 
@@ -84,15 +97,15 @@ const PlayerManagement: React.FC = () => {
       position: player.position,
       birthdate: player.birthdate,
       nationality: player.nationality,
-      club_id: player.club_id,
+      clubId: player.clubId,
       image: player.image,
       height: player.height,
       weight: player.weight,
       appearances: player.appearances,
       goals: player.goals,
       assists: player.assists,
-      yellow_cards: player.yellow_cards,
-      red_cards: player.red_cards,
+      yellowCards: player.yellowCards,
+      redCards: player.redCards,
     });
     setShowForm(true);
   };
@@ -114,21 +127,27 @@ const PlayerManagement: React.FC = () => {
       position: '',
       birthdate: '',
       nationality: '',
-      club_id: '',
+      clubId: '',
       image: '',
       height: '',
       weight: '',
       appearances: 0,
       goals: 0,
       assists: 0,
-      yellow_cards: 0,
-      red_cards: 0,
+      yellowCards: 0,
+      redCards: 0,
     });
+    setError(null);
+    setValidationErrors(null);
   };
 
   const getClubName = (clubId: string) => {
     const club = clubs.find(c => c.id === clubId);
     return club ? club.name : 'Club inconnu';
+  };
+
+  const getFieldError = (field: string) => {
+    return validationErrors?.[field]?.[0] || null;
   };
 
   if (loading) {
@@ -156,6 +175,13 @@ const PlayerManagement: React.FC = () => {
           <h3 className="text-lg font-semibold mb-4">
             {editingPlayer ? 'Modifier le Joueur' : 'Nouveau Joueur'}
           </h3>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -164,16 +190,19 @@ const PlayerManagement: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('name') ? 'border-red-500' : 'border-gray-300'}`}
                   required
                 />
+                {getFieldError('name') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('name')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Position</label>
                 <select
                   value={formData.position}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('position') ? 'border-red-500' : 'border-gray-300'}`}
                   required
                 >
                   <option value="">Sélectionner une position</option>
@@ -182,6 +211,9 @@ const PlayerManagement: React.FC = () => {
                   <option value="Midfielder">Milieu</option>
                   <option value="Forward">Attaquant</option>
                 </select>
+                {getFieldError('position') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('position')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Date de naissance</label>
@@ -189,9 +221,12 @@ const PlayerManagement: React.FC = () => {
                   type="date"
                   value={formData.birthdate}
                   onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('birthdate') ? 'border-red-500' : 'border-gray-300'}`}
                   required
                 />
+                {getFieldError('birthdate') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('birthdate')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nationalité</label>
@@ -199,16 +234,19 @@ const PlayerManagement: React.FC = () => {
                   type="text"
                   value={formData.nationality}
                   onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('nationality') ? 'border-red-500' : 'border-gray-300'}`}
                   required
                 />
+                {getFieldError('nationality') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('nationality')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Club</label>
                 <select
-                  value={formData.club_id}
-                  onChange={(e) => setFormData({ ...formData, club_id: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  value={formData.clubId}
+                  onChange={(e) => setFormData({ ...formData, clubId: e.target.value })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('club_id') ? 'border-red-500' : 'border-gray-300'}`}
                   required
                 >
                   <option value="">Sélectionner un club</option>
@@ -218,6 +256,9 @@ const PlayerManagement: React.FC = () => {
                     </option>
                   ))}
                 </select>
+                {getFieldError('club_id') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('club_id')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Image URL</label>
@@ -225,8 +266,11 @@ const PlayerManagement: React.FC = () => {
                   type="url"
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('image') ? 'border-red-500' : 'border-gray-300'}`}
                 />
+                {getFieldError('image') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('image')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Taille</label>
@@ -234,9 +278,12 @@ const PlayerManagement: React.FC = () => {
                   type="text"
                   value={formData.height}
                   onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('height') ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="ex: 1.80m"
                 />
+                {getFieldError('height') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('height')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Poids</label>
@@ -244,59 +291,77 @@ const PlayerManagement: React.FC = () => {
                   type="text"
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('weight') ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="ex: 75kg"
                 />
+                {getFieldError('weight') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('weight')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Matchs joués</label>
                 <input
                   type="number"
                   value={formData.appearances}
-                  onChange={(e) => setFormData({ ...formData, appearances: parseInt(e.target.value) })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  onChange={(e) => setFormData({ ...formData, appearances: parseInt(e.target.value) || 0 })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('appearances') ? 'border-red-500' : 'border-gray-300'}`}
                   min="0"
                 />
+                {getFieldError('appearances') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('appearances')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Buts</label>
                 <input
                   type="number"
                   value={formData.goals}
-                  onChange={(e) => setFormData({ ...formData, goals: parseInt(e.target.value) })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  onChange={(e) => setFormData({ ...formData, goals: parseInt(e.target.value) || 0 })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('goals') ? 'border-red-500' : 'border-gray-300'}`}
                   min="0"
                 />
+                {getFieldError('goals') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('goals')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Passes décisives</label>
                 <input
                   type="number"
                   value={formData.assists}
-                  onChange={(e) => setFormData({ ...formData, assists: parseInt(e.target.value) })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  onChange={(e) => setFormData({ ...formData, assists: parseInt(e.target.value) || 0 })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('assists') ? 'border-red-500' : 'border-gray-300'}`}
                   min="0"
                 />
+                {getFieldError('assists') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('assists')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Cartons jaunes</label>
                 <input
                   type="number"
-                  value={formData.yellow_cards}
-                  onChange={(e) => setFormData({ ...formData, yellow_cards: parseInt(e.target.value) })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  value={formData.yellowCards}
+                  onChange={(e) => setFormData({ ...formData, yellowCards: parseInt(e.target.value) || 0 })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('yellow_cards') ? 'border-red-500' : 'border-gray-300'}`}
                   min="0"
                 />
+                {getFieldError('yellow_cards') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('yellow_cards')}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Cartons rouges</label>
                 <input
                   type="number"
-                  value={formData.red_cards}
-                  onChange={(e) => setFormData({ ...formData, red_cards: parseInt(e.target.value) })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  value={formData.redCards}
+                  onChange={(e) => setFormData({ ...formData, redCards: parseInt(e.target.value) || 0 })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('red_cards') ? 'border-red-500' : 'border-gray-300'}`}
                   min="0"
                 />
+                {getFieldError('red_cards') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('red_cards')}</p>
+                )}
               </div>
             </div>
             <div className="flex justify-end space-x-3">
@@ -365,12 +430,12 @@ const PlayerManagement: React.FC = () => {
                   {player.position}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getClubName(player.club_id)}
+                  {getClubName(player.clubId)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div>Matchs: {player.appearances}</div>
                   <div>Buts: {player.goals} | Passes: {player.assists}</div>
-                  <div>Cartons: {player.yellow_cards}J/{player.red_cards}R</div>
+                  <div>Cartons: {player.yellowCards}J/{player.redCards}R</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
@@ -396,13 +461,3 @@ const PlayerManagement: React.FC = () => {
 };
 
 export default PlayerManagement;
-
-
-
-
-
-
-
-
-
-

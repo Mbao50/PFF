@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Tag } from 'lucide-react';
-import { articles } from '../data/mockData';
+import apiService from '../services/ApiService';
 import { Article } from '../types';
 
 const NewsDetail: React.FC = () => {
@@ -19,16 +19,13 @@ const NewsDetail: React.FC = () => {
       }
       try {
         setLoading(true);
-        // Use mock data from mockData.ts
-        const mockArticle = articles.find(a => a.id === id);
-        if (!mockArticle) {
-          setError('Article non trouvé');
-          setLoading(false);
-          return;
-        }
-        setArticle(mockArticle);
+        console.log('Fetching article details for id:', id);
+        const articleData = await apiService.getArticle(id);
+        console.log('Article data received:', articleData);
+        setArticle(articleData);
         setError(null);
       } catch (err) {
+        console.error('Error fetching article details:', err);
         setError('Erreur lors du chargement de l\'article');
       } finally {
         setLoading(false);

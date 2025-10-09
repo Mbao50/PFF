@@ -47,8 +47,9 @@ export interface Article {
   image: string;
   author: string;
   date: string;
-  category: 'news' | 'transfer' | 'interview' | 'analysis';
+  category: 'news' | 'transfer' | 'interview' | 'analysis' | 'match';
   tags: string[];
+  is_published: boolean;
 }
 
 export interface StandingEntry {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, Trophy, Target, Users } from 'lucide-react';
-import { matches, players } from '../data/mockData';
+import apiService from '../services/ApiService';
 import { Match, Player } from '../types';
 
 const MatchDetail: React.FC = () => {
@@ -21,20 +21,24 @@ const MatchDetail: React.FC = () => {
       }
       try {
         setLoading(true);
-        // Use mock data from mockData.ts
-        const mockMatch = matches.find(m => m.id === id);
-        if (!mockMatch) {
-          setError('Match non trouvé');
-          setLoading(false);
-          return;
-        }
-        setMatch(mockMatch);
+        console.log('Fetching match details for id:', id);
+        const matchData = await apiService.getMatch(id);
+        console.log('Match data received:', matchData);
+        setMatch(matchData);
 
-        // Use players from mockData.ts
-        setHomeTeamPlayers(players.filter(p => p.clubId === mockMatch.homeTeam.id));
-        setAwayTeamPlayers(players.filter(p => p.clubId === mockMatch.awayTeam.id));
-        setError(null);
+        // Fetch players for both teams only if teams exist
+        const allPlayers = await apiService.getPlayers();
+        if (matchData.homeTeam && matchData.awayTeam) {
+          setHomeTeamPlayers(allPlayers.filter(p => p.clubId === matchData.homeTeam.id));
+          setAwayTeamPlayers(allPlayers.filter(p => p.clubId === matchData.awayTeam.id));
+          setError(null);
+        } else {
+          setHomeTeamPlayers([]);
+          setAwayTeamPlayers([]);
+          setError('Les informations des équipes sont manquantes pour ce match.');
+        }
       } catch (err) {
+        console.error('Error fetching match details:', err);
         setError('Erreur lors du chargement des détails du match');
       } finally {
         setLoading(false);

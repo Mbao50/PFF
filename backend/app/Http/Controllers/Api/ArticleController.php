@@ -15,7 +15,6 @@ class ArticleController extends Controller
     public function index()
     {
         $articles = Article::where('is_active', true)
-            ->where('is_published', true)
             ->orderBy('published_at', 'desc')
             ->get();
         
@@ -35,7 +34,7 @@ class ArticleController extends Controller
             'content' => 'required|string',
             'image' => 'nullable|string|url',
             'author' => 'required|string|max:255',
-            'category' => 'required|in:news,transfer,interview,analysis',
+            'category' => 'required|in:news,transfer,interview,analysis,match',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:100',
             'is_published' => 'boolean',
@@ -68,7 +67,7 @@ class ArticleController extends Controller
      */
     public function show(Article $article)
     {
-        if (!$article->is_active || !$article->is_published) {
+        if (!$article->is_active) {
             return response()->json([
                 'success' => false,
                 'message' => 'Article non trouvé'
@@ -91,7 +90,7 @@ class ArticleController extends Controller
             'content' => 'sometimes|required|string',
             'image' => 'sometimes|nullable|string|url',
             'author' => 'sometimes|required|string|max:255',
-            'category' => 'sometimes|required|in:news,transfer,interview,analysis',
+            'category' => 'sometimes|required|in:news,transfer,interview,analysis,match',
             'tags' => 'sometimes|nullable|array',
             'tags.*' => 'string|max:100',
             'is_published' => 'sometimes|boolean',
@@ -108,6 +107,8 @@ class ArticleController extends Controller
         $data = $request->all();
         if (isset($data['is_published']) && $data['is_published'] && !$article->is_published) {
             $data['published_at'] = now();
+        } elseif (isset($data['is_published']) && !$data['is_published']) {
+            $data['published_at'] = null;
         }
 
         $article->update($data);

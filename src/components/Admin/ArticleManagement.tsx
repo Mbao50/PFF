@@ -24,8 +24,10 @@ const ArticleManagement: React.FC = () => {
     author: '',
     category: '',
     tags: [],
+    is_published: false,
   });
   const [tagInput, setTagInput] = useState('');
+  const [activeTab, setActiveTab] = useState<'unpublished' | 'published'>('unpublished');
 
   useEffect(() => {
     loadArticles();
@@ -46,10 +48,16 @@ const ArticleManagement: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const articleData = {
+        ...formData,
+        date: new Date().toISOString().split('T')[0], // Add current date
+        category: formData.category as 'news' | 'transfer' | 'interview' | 'analysis' | 'match', // Cast category including 'match'
+      };
+
       if (editingArticle) {
-        await ApiService.updateArticle(editingArticle.id, formData);
+        await ApiService.updateArticle(editingArticle.id, articleData);
       } else {
-        await ApiService.createArticle(formData);
+        await ApiService.createArticle(articleData);
       }
       setShowForm(false);
       setEditingArticle(null);
@@ -69,6 +77,7 @@ const ArticleManagement: React.FC = () => {
       author: article.author,
       category: article.category,
       tags: article.tags || [],
+      is_published: article.is_published,
     });
     setShowForm(true);
   };
@@ -101,6 +110,7 @@ const ArticleManagement: React.FC = () => {
       author: '',
       category: '',
       tags: [],
+      is_published: false,
     });
     setTagInput('');
   };
@@ -120,6 +130,11 @@ const ArticleManagement: React.FC = () => {
     return <div className="text-center py-8">Chargement...</div>;
   }
 
+  // Filter articles based on active tab
+  const filteredArticles = articles.filter(article =>
+    activeTab === 'published' ? article.is_published : !article.is_published
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -135,6 +150,59 @@ const ArticleManagement: React.FC = () => {
           Ajouter un Article
         </button>
       </div>
+
+      {/* Tabs for Published and Unpublished */}
+      <div className="mb-4">
+        <button
+          onClick={() => setActiveTab('unpublished')}
+          className={`mr-4 px-4 py-2 rounded ${
+            activeTab === 'unpublished' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+          }`}
+        >
+          Articles non publiés ({articles.filter(a => !a.is_published).length})
+        </button>
+        <button
+          onClick={() => setActiveTab('published')}
+          className={`px-4 py-2 rounded ${
+            activeTab === 'published' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+          }`}
+        >
+          Articles publiés ({articles.filter(a => a.is_published).length})
+        </button>
+      </div>
+
+      {filteredArticles.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Aucun article {activeTab === 'published' ? 'publié' : 'non publié'} trouvé
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>
+                  {activeTab === 'unpublished'
+                    ? 'Les nouveaux articles apparaîtront ici. Vous pouvez créer de nouveaux articles qui seront sauvegardés dans la base de données.'
+                    : 'Aucun article n\'a encore été publié. Utilisez le bouton "Publier" pour rendre les articles visibles.'
+                  }
+                </p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={loadArticles}
+                  className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Réessayer de charger
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -189,7 +257,7 @@ const ArticleManagement: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Contenu</label>
               <textarea
@@ -285,7 +353,7 @@ const ArticleManagement: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {articles.map((article) => (
+            {filteredArticles.map((article) => (
               <tr key={article.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -354,13 +422,3 @@ const ArticleManagement: React.FC = () => {
 };
 
 export default ArticleManagement;
-
-
-
-
-
-
-
-
-
-

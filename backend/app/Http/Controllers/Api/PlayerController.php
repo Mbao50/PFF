@@ -15,7 +15,7 @@ class PlayerController extends Controller
     public function index()
     {
         $players = Player::with('club')->where('is_active', true)->get();
-        
+
         return response()->json([
             'success' => true,
             'data' => $players
@@ -34,8 +34,8 @@ class PlayerController extends Controller
             'nationality' => 'required|string|max:100',
             'club_id' => 'required|uuid|exists:clubs,id',
             'image' => 'nullable|string|url',
-            'height' => 'required|string|max:20',
-            'weight' => 'required|string|max:20',
+            'height' => 'nullable|string|max:20',
+            'weight' => 'nullable|string|max:20',
             'appearances' => 'nullable|integer|min:0',
             'goals' => 'nullable|integer|min:0',
             'assists' => 'nullable|integer|min:0',
@@ -92,8 +92,8 @@ class PlayerController extends Controller
             'nationality' => 'sometimes|required|string|max:100',
             'club_id' => 'sometimes|required|uuid|exists:clubs,id',
             'image' => 'sometimes|nullable|string|url',
-            'height' => 'sometimes|required|string|max:20',
-            'weight' => 'sometimes|required|string|max:20',
+            'height' => 'nullable|string|max:20',
+            'weight' => 'nullable|string|max:20',
             'appearances' => 'sometimes|nullable|integer|min:0',
             'goals' => 'sometimes|nullable|integer|min:0',
             'assists' => 'sometimes|nullable|integer|min:0',

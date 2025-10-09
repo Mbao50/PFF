@@ -79,13 +79,13 @@ Route::prefix('v1/auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
         
         // Routes protégées par authentification admin
-        Route::middleware(['auth:admin', 'admin.auth'])->group(function () {
+        Route::middleware(['auth:admin', \App\Http\Middleware\AdminAuth::class])->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
             Route::get('/me', [AuthController::class, 'me']);
             Route::post('/change-password', [AuthController::class, 'changePassword']);
-            
+
             // Routes réservées aux super administrateurs
-            Route::middleware(['admin.auth:super_admin'])->group(function () {
+            Route::middleware(\App\Http\Middleware\AdminAuth::class . ':super_admin')->group(function () {
                 Route::post('/create', [AuthController::class, 'createAdmin']);
                 Route::get('/list', [AuthController::class, 'listAdmins']);
                 Route::post('/{id}/toggle-status', [AuthController::class, 'toggleAdminStatus']);
@@ -119,7 +119,7 @@ Route::prefix('v1')->group(function () {
 });
 
 // Routes protégées (administration)
-Route::middleware(['auth:admin', 'admin.auth:editor'])->prefix('v1/admin')->group(function () {
+Route::middleware(['auth:admin', \App\Http\Middleware\AdminAuth::class . ':editor'])->prefix('v1/admin')->group(function () {
     // Gestion des clubs
     Route::apiResource('clubs', ClubController::class);
     

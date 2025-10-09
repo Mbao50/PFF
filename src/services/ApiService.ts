@@ -16,6 +16,9 @@ class ApiService {
       },
     });
 
+    // Get token from sessionStorage if available
+    this.token = sessionStorage.getItem('samafoot_admin_token');
+
     // Add a request interceptor to include Authorization header if token is set
     this.api.interceptors.request.use(
       (config) => {
@@ -31,12 +34,28 @@ class ApiService {
 
   setToken(token: string | null) {
     this.token = token;
+    if (token) {
+      sessionStorage.setItem('samafoot_admin_token', token);
+    } else {
+      sessionStorage.removeItem('samafoot_admin_token');
+    }
   }
 
   // Clubs
   async getClubs(): Promise<Club[]> {
-    // For now, always return mock data to ensure consistency between admin and user views
-    return clubs;
+    try {
+      const response = await this.api.get('/admin/clubs');
+      return response.data.data || [];
+    } catch (error) {
+      console.warn('Failed to fetch clubs from API:', error);
+      // Only fallback to mock data if not authenticated (for public views)
+      // For admin interface, return empty array to avoid confusion with mock data
+      if (!this.token) {
+        return clubs;
+      }
+      // If authenticated but API fails, return empty array instead of mock data
+      return [];
+    }
   }
 
   async createClub(data: Omit<Club, 'id'>): Promise<Club> {
@@ -55,8 +74,19 @@ class ApiService {
 
   // Players
   async getPlayers(): Promise<Player[]> {
-    // For now, always return mock data to ensure consistency between admin and user views
-    return players;
+    try {
+      const response = await this.api.get('/admin/players');
+      return response.data.data || [];
+    } catch (error) {
+      console.warn('Failed to fetch players from API:', error);
+      // Only fallback to mock data if not authenticated (for public views)
+      // For admin interface, return empty array to avoid confusion with mock data
+      if (!this.token) {
+        return players;
+      }
+      // If authenticated but API fails, return empty array instead of mock data
+      return [];
+    }
   }
 
   async createPlayer(data: Omit<Player, 'id'>): Promise<Player> {
@@ -75,15 +105,35 @@ class ApiService {
 
   // Matches
   async getMatches(): Promise<Match[]> {
-    // For now, always return mock data to ensure consistency between admin and user views
-    return matches;
+    try {
+      const response = await this.api.get('/admin/matches');
+      return response.data.data || [];
+    } catch (error) {
+      console.warn('Failed to fetch matches from API:', error);
+      // Only fallback to mock data if not authenticated (for public views)
+      // For admin interface, return empty array to avoid confusion with mock data
+      if (!this.token) {
+        return matches;
+      }
+      // If authenticated but API fails, return empty array instead of mock data
+      return [];
+    }
   }
 
   async getMatch(id: string): Promise<Match> {
-    // For now, always return mock data to ensure consistency between admin and user views
-    const match = matches.find(m => m.id === id);
-    if (!match) throw new Error('Match not found in mock data');
-    return match;
+    try {
+      const response = await this.api.get(`/matches/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.warn('Failed to fetch match from API:', error);
+      // Fallback to mock data if not authenticated
+      if (!this.token) {
+        const match = matches.find(m => m.id === id);
+        if (!match) throw new Error('Match not found in mock data');
+        return match;
+      }
+      throw error;
+    }
   }
 
   async createMatch(data: Omit<Match, 'id'>): Promise<Match> {
@@ -102,8 +152,35 @@ class ApiService {
 
   // Articles
   async getArticles(): Promise<Article[]> {
-    // For now, always return mock data to ensure consistency between admin and user views
-    return articles;
+    try {
+      const response = await this.api.get('/admin/articles');
+      return response.data.data || [];
+    } catch (error) {
+      console.warn('Failed to fetch articles from API:', error);
+      // Only fallback to mock data if not authenticated (for public views)
+      // For admin interface, return empty array to avoid confusion with mock data
+      if (!this.token) {
+        return articles;
+      }
+      // If authenticated but API fails, return empty array instead of mock data
+      return [];
+    }
+  }
+
+  async getArticle(id: string): Promise<Article> {
+    try {
+      const response = await this.api.get(`/admin/articles/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.warn('Failed to fetch article from API:', error);
+      // Fallback to mock data if not authenticated
+      if (!this.token) {
+        const article = articles.find(a => a.id === id);
+        if (!article) throw new Error('Article not found in mock data');
+        return article;
+      }
+      throw error;
+    }
   }
 
   async createArticle(data: Omit<Article, 'id'>): Promise<Article> {

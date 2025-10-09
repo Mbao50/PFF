@@ -6,6 +6,7 @@ import Matches from './pages/Matches';
 import Clubs from './pages/Clubs';
 import Players from './pages/Players';
 import Rankings from './pages/Rankings';
+import News from './pages/News';
 import Admin from './pages/Admin';
 import ClubDetail from './pages/ClubDetail';
 import PlayerDetail from './pages/PlayerDetail';
@@ -23,6 +24,7 @@ function App() {
           <Route path="/clubs" element={<Clubs />} />
           <Route path="/players" element={<Players />} />
           <Route path="/rankings" element={<Rankings />} />
+          <Route path="/news" element={<News />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/search" element={<SearchScreen />} />
           <Route path="/clubs/:id" element={<ClubDetail />} />

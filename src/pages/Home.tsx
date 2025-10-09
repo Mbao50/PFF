@@ -1,19 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { matches, articles, competitions } from '../data/mockData';
 import FeaturedMatch from '../components/Home/FeaturedMatch';
 import NewsCard from '../components/Home/NewsCard';
 import StandingTable from '../components/Home/StandingTable';
+import apiService from '../services/ApiService';
+import { Match, Article } from '../types';
 
 const Home: React.FC = () => {
-  // Get upcoming and recent matches
-  const upcomingMatches = matches.filter(match => match.status === 'upcoming').slice(0, 3);
-  const recentMatches = matches.filter(match => match.status === 'completed').slice(0, 3);
-  
-  // Get latest news
-  const latestNews = [...articles].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3);
-  
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [recentMatches, setRecentMatches] = useState<Match[]>([]);
+  const [latestNews, setLatestNews] = useState<Article[]>([]);
+  const [competitions, setCompetitions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const matches = await apiService.getMatches();
+        setUpcomingMatches(matches.filter(match => match.status === 'upcoming').slice(0, 3));
+        setRecentMatches(matches.filter(match => match.status === 'completed').slice(0, 3));
+
+        const articles = await apiService.getArticles();
+        setLatestNews(articles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3));
+
+        // Assuming competitions API or data is available, else keep empty or mock
+        setCompetitions([]); // Update if API available
+      } catch (error) {
+        console.error('Error fetching home page data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div>
       {/* Hero Banner */}
@@ -159,8 +178,8 @@ const Home: React.FC = () => {
             </div>
             
             <StandingTable 
-              standings={competitions[0].standings} 
-              competitionName={competitions[0].name}
+              standings={competitions[0]?.standings || []} 
+              competitionName={competitions[0]?.name || ''}
             />
           </div>
         </div>
@@ -190,3 +209,4 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+

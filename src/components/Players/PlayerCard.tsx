@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Flag, Calendar } from 'lucide-react';
-import { Player } from '../../types';
-import { clubs } from '../../data/mockData';
+import { Player, Club } from '../../types';
+import ApiService from '../../services/ApiService';
 
 interface PlayerCardProps {
   player: Player;
@@ -16,8 +16,21 @@ const positionTranslations: { [key: string]: string } = {
 };
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ player }) => {
-  // Find the player's club
-  const club = clubs.find(c => c.id === player.clubId);
+  const [club, setClub] = useState<Club | null>(null);
+
+  useEffect(() => {
+    const loadClub = async () => {
+      try {
+        const clubsData = await ApiService.getClubs();
+        const playerClub = clubsData.find((c: Club) => c.id === player.clubId);
+        setClub(playerClub || null);
+      } catch (error) {
+        console.error('Erreur lors du chargement du club:', error);
+      }
+    };
+
+    loadClub();
+  }, [player.clubId]);
 
   // Format the date
   const formatBirthdate = (dateString: string) => {

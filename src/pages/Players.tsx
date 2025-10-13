@@ -1,28 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { clubs } from '../data/mockData';
 import ApiService from '../services/ApiService';
 import PlayerCard from '../components/Players/PlayerCard';
-import { Player } from '../types';
+import { Player, Club } from '../types';
 
 const Players: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   // State for filtering players by club
   const [clubFilter, setClubFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadPlayers = async () => {
+    const loadData = async () => {
       try {
-        const playersData = await ApiService.getPlayers();
+        const [playersData, clubsData] = await Promise.all([
+          ApiService.getPlayers(),
+          ApiService.getClubs()
+        ]);
         setPlayers(playersData);
+        setClubs(clubsData);
       } catch (error) {
-        console.error('Error loading players:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPlayers();
+    loadData();
   }, []);
 
   // Filter players by selected club

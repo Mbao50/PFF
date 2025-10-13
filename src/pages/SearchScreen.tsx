@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Search, Calendar, MapPin, Users } from 'lucide-react';
 import { Club, Player, Match } from '../types';
-import { clubs, players, matches } from '../data/mockData';
+import ApiService from '../services/ApiService';
 
 const SearchScreen: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,24 +18,59 @@ const SearchScreen: React.FC = () => {
     players: [],
     matches: []
   });
+  const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [allClubs, setAllClubs] = useState<Club[]>([]);
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const [allMatches, setAllMatches] = useState<Match[]>([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (dataLoaded) {
+      performSearch(query);
+    }
+  }, [query, dataLoaded]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [clubsData, playersData, matchesData] = await Promise.all([
+        ApiService.getClubs(),
+        ApiService.getPlayers(),
+        ApiService.getMatches()
+      ]);
+
+      setAllClubs(clubsData);
+      setAllPlayers(playersData);
+      setAllMatches(matchesData);
+      setDataLoaded(true);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données de recherche:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const performSearch = (searchQuery: string) => {
-    if (searchQuery.trim()) {
+    if (searchQuery.trim() && dataLoaded) {
       const lowerQuery = searchQuery.toLowerCase();
 
-      const filteredClubs = clubs.filter(club =>
+      const filteredClubs = allClubs.filter(club =>
         club.name.toLowerCase().includes(lowerQuery) ||
         club.shortName.toLowerCase().includes(lowerQuery) ||
         club.location.toLowerCase().includes(lowerQuery)
       );
 
-      const filteredPlayers = players.filter(player =>
+      const filteredPlayers = allPlayers.filter(player =>
         player.name.toLowerCase().includes(lowerQuery) ||
         player.position.toLowerCase().includes(lowerQuery) ||
         player.nationality.toLowerCase().includes(lowerQuery)
       );
 
-      const filteredMatches = matches.filter(match =>
+      const filteredMatches = allMatches.filter(match =>
         match.homeTeam.name.toLowerCase().includes(lowerQuery) ||
         match.awayTeam.name.toLowerCase().includes(lowerQuery) ||
         match.competition.toLowerCase().includes(lowerQuery) ||
@@ -55,10 +90,6 @@ const SearchScreen: React.FC = () => {
       });
     }
   };
-
-  useEffect(() => {
-    performSearch(query);
-  }, [query]);
 
   const handleLocalSearch = () => {
     if (localQuery.trim()) {
@@ -82,24 +113,12 @@ const SearchScreen: React.FC = () => {
           Résultats de recherche
         </h1>
         <div className="flex items-center space-x-4 mb-4">
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <input
-                type="text"
-                value={query}
-                placeholder="Rechercher..."
-                className="w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
-                readOnly
-              />
-              <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-            </div>
-          </div>
           <span className="text-gray-600">
             {totalResults} résultat{totalResults !== 1 ? 's' : ''} pour "{query}"
           </span>
         </div>
 
-        {/* New search input */}
+        {/* Search input */}
         <div className="max-w-md">
           <div className="relative">
             <input

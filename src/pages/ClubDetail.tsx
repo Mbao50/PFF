@@ -1,21 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, User, Trophy, Users } from 'lucide-react';
-import { clubs, players, matches } from '../data/mockData';
+import ApiService from '../services/ApiService';
+import { Club, Player, Match } from '../types';
 
 const ClubDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [club, setClub] = useState<Club | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Find the club
-  const club = clubs.find(c => c.id === id);
+  useEffect(() => {
+    loadClubData();
+  }, [id]);
 
-  // Find players from this club
-  const clubPlayers = players.filter(p => p.clubId === id);
+  const loadClubData = async () => {
+    if (!id) return;
 
-  // Find matches where this club played
-  const clubMatches = matches.filter(m =>
-    m.homeTeam.id === id || m.awayTeam.id === id
-  ).slice(0, 5);
+    try {
+      setLoading(true);
+      const [clubData, playersData, matchesData] = await Promise.all([
+        ApiService.getClub(id),
+        ApiService.getPlayers(),
+        ApiService.getMatches()
+      ]);
+
+      setClub(clubData);
+      setPlayers(playersData.filter(p => p.clubId === id));
+      setMatches(matchesData.filter(m =>
+        m.homeTeam.id === id || m.awayTeam.id === id
+      ).slice(0, 5));
+    } catch (error) {
+      console.error('Erreur lors du chargement des données du club:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-700 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement du club...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!club) {
     return (
@@ -23,8 +55,8 @@ const ClubDetail: React.FC = () => {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           Club non trouvé
         </div>
-        <Link 
-          to="/clubs" 
+        <Link
+          to="/clubs"
           className="text-green-700 hover:text-green-800 transition duration-150"
         >
           Retour aux clubs
@@ -68,7 +100,7 @@ const ClubDetail: React.FC = () => {
               <Calendar size={20} className="text-green-700 mr-3" />
               <div>
                 <p className="text-sm text-gray-500">Fondé en</p>
-                <p className="font-semibold">{club.founded}</p>
+                <p className="font-semibold">{club.founded || 'Non spécifié'}</p>
               </div>
             </div>
             
@@ -106,21 +138,21 @@ const ClubDetail: React.FC = () => {
             <div className="bg-green-700 text-white p-4">
               <h2 className="text-xl font-bold flex items-center">
                 <Users size={20} className="mr-2" />
-                Effectif ({clubPlayers.length} joueurs)
+                Effectif ({players.length} joueurs)
               </h2>
             </div>
             
             <div className="p-6">
-              {clubPlayers.length > 0 ? (
+              {players.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {clubPlayers.map(player => (
-                    <Link 
+                  {players.map((player: Player) => (
+                    <Link
                       key={player.id}
                       to={`/players/${player.id}`}
                       className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-150"
                     >
-                      <img 
-                        src={player.image} 
+                      <img
+                        src={player.image}
                         alt={player.name}
                         className="w-12 h-12 rounded-full object-cover mr-4"
                       />
@@ -147,22 +179,22 @@ const ClubDetail: React.FC = () => {
             </div>
             
             <div className="p-6">
-              {clubMatches.length > 0 ? (
+              {matches.length > 0 ? (
                 <div className="space-y-4">
-                  {clubMatches.map(match => (
+                  {matches.map((match: Match) => (
                     <div key={match.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="text-xs text-gray-500 mb-2">{match.date}</div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <img 
-                            src={match.homeTeam.logo} 
+                          <img
+                            src={match.homeTeam.logo}
                             alt={match.homeTeam.name}
                             className="w-6 h-6 object-contain mr-2"
                           />
                           <span className="text-sm font-medium">{match.homeTeam.shortName}</span>
                         </div>
-                        
+
                         {match.status === 'completed' ? (
                           <div className="flex items-center">
                             <span className="font-bold">{match.homeScore}</span>
@@ -172,11 +204,11 @@ const ClubDetail: React.FC = () => {
                         ) : (
                           <span className="text-xs text-gray-500">{match.time}</span>
                         )}
-                        
+
                         <div className="flex items-center">
                           <span className="text-sm font-medium">{match.awayTeam.shortName}</span>
-                          <img 
-                            src={match.awayTeam.logo} 
+                          <img
+                            src={match.awayTeam.logo}
                             alt={match.awayTeam.name}
                             className="w-6 h-6 object-contain ml-2"
                           />

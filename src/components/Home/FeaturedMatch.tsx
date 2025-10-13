@@ -14,7 +14,7 @@ const FeaturedMatch: React.FC<FeaturedMatchProps> = ({ match }) => {
         <span className="font-medium text-sm">{match.competition}</span>
         <span className="flex items-center text-sm">
           <Clock size={14} className="mr-1" />
-          {match.status === 'upcoming' ? `${match.date} - ${match.time}` : match.status === 'live' ? 'En direct' : 'Terminé'}
+          {match.status === 'upcoming' ? `${match.date} - ${match.time}` : match.status === 'live' ? 'En direct' : match.status === 'cancelled' ? 'Annulé' : 'Terminé'}
         </span>
       </div>
       
@@ -65,7 +65,7 @@ const FeaturedMatch: React.FC<FeaturedMatchProps> = ({ match }) => {
           to={`/matches/${match.id}`} 
           className="block w-full text-center text-green-700 border border-green-700 rounded py-2 font-medium text-sm hover:bg-green-700 hover:text-white transition duration-300"
         >
-          {match.status === 'completed' ? 'Voir le résumé' : match.status === 'live' ? 'Suivre en direct' : 'Plus d\'informations'}
+          {match.status === 'completed' ? 'Voir le résumé' : match.status === 'live' ? 'Suivre en direct' : match.status === 'cancelled' ? 'Match annulé' : 'Plus d\'informations'}
         </Link>
       </div>
     </div>

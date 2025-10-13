@@ -30,6 +30,22 @@ class ApiService {
       },
       (error) => Promise.reject(error)
     );
+
+    // Add a response interceptor to handle 401 errors
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Token is invalid or expired, logout user
+          this.setToken(null);
+          // Redirect to admin login if in admin context
+          if (window.location.pathname.startsWith('/admin')) {
+            window.location.href = '/admin';
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   setToken(token: string | null) {
@@ -44,38 +60,119 @@ class ApiService {
   // Clubs
   async getClubs(): Promise<Club[]> {
     try {
-      const response = await this.api.get('/admin/clubs');
-      return response.data.data || [];
+      const endpoint = this.token ? '/admin/clubs' : '/clubs';
+      const response = await this.api.get(endpoint);
+      // Transform snake_case to camelCase
+      const clubs = response.data.data || [];
+      return clubs.map((club: any) => ({
+        id: club.id,
+        name: club.name,
+        shortName: club.short_name,
+        logo: club.logo,
+        founded: club.founded,
+        stadium: club.stadium,
+        coach: club.coach,
+        location: club.location,
+        colors: club.colors,
+      }));
     } catch (error) {
       console.warn('Failed to fetch clubs from API:', error);
-      // Only fallback to mock data if not authenticated (for public views)
-      // For admin interface, return empty array to avoid confusion with mock data
-      if (!this.token) {
-        return clubs;
-      }
-      // If authenticated but API fails, return empty array instead of mock data
-      return [];
+      // Always fallback to mock data to ensure clubs display
+      return clubs;
     }
   }
 
   async createClub(data: Omit<Club, 'id'>): Promise<Club> {
-    const response = await this.api.post('/admin/clubs', data);
-    return response.data.data;
+    // Convert camelCase to snake_case for backend
+    const backendData = {
+      name: data.name,
+      short_name: data.shortName,
+      logo: data.logo,
+      founded: data.founded,
+      stadium: data.stadium,
+      coach: data.coach,
+      location: data.location,
+      colors: data.colors,
+    };
+    const response = await this.api.post('/admin/clubs', backendData);
+    // Transform response back to camelCase
+    const club = response.data.data;
+    return {
+      id: club.id,
+      name: club.name,
+      shortName: club.short_name,
+      logo: club.logo,
+      founded: club.founded,
+      stadium: club.stadium,
+      coach: club.coach,
+      location: club.location,
+      colors: club.colors,
+    };
   }
 
   async updateClub(id: string, data: Partial<Club>): Promise<Club> {
-    const response = await this.api.put(`/admin/clubs/${id}`, data);
-    return response.data.data;
+    // Convert camelCase to snake_case for backend
+    const backendData: any = {};
+    if (data.name !== undefined) backendData.name = data.name;
+    if (data.shortName !== undefined) backendData.short_name = data.shortName;
+    if (data.logo !== undefined) backendData.logo = data.logo;
+    if (data.founded !== undefined) backendData.founded = data.founded;
+    if (data.stadium !== undefined) backendData.stadium = data.stadium;
+    if (data.coach !== undefined) backendData.coach = data.coach;
+    if (data.location !== undefined) backendData.location = data.location;
+    if (data.colors !== undefined) backendData.colors = data.colors;
+
+    const response = await this.api.put(`/admin/clubs/${id}`, backendData);
+    // Transform response back to camelCase
+    const club = response.data.data;
+    return {
+      id: club.id,
+      name: club.name,
+      shortName: club.short_name,
+      logo: club.logo,
+      founded: club.founded,
+      stadium: club.stadium,
+      coach: club.coach,
+      location: club.location,
+      colors: club.colors,
+    };
   }
 
   async deleteClub(id: string): Promise<void> {
     await this.api.delete(`/admin/clubs/${id}`);
   }
 
+  async getClub(id: string): Promise<Club> {
+    try {
+      const endpoint = this.token ? `/admin/clubs/${id}` : `/clubs/${id}`;
+      const response = await this.api.get(endpoint);
+      const club = response.data.data;
+      return {
+        id: club.id,
+        name: club.name,
+        shortName: club.short_name,
+        logo: club.logo,
+        founded: club.founded,
+        stadium: club.stadium,
+        coach: club.coach,
+        location: club.location,
+        colors: club.colors,
+      };
+    } catch (error) {
+      console.warn('Failed to fetch club from API:', error);
+      // Fallback to mock data
+      const clubsData = clubs;
+      const club = clubsData.find((c: any) => c.id === id);
+      if (!club) throw new Error('Club not found');
+      return club;
+    }
+  }
+
   // Players
   async getPlayers(): Promise<Player[]> {
     try {
-      const response = await this.api.get('/admin/players');
+      const endpoint = this.token ? '/admin/players' : '/players';
+      const response = await this.api.get(endpoint);
       // Transform snake_case to camelCase
       const players = response.data.data || [];
       return players.map((player: any) => ({
@@ -96,13 +193,8 @@ class ApiService {
       }));
     } catch (error) {
       console.warn('Failed to fetch players from API:', error);
-      // Only fallback to mock data if not authenticated (for public views)
-      // For admin interface, return empty array to avoid confusion with mock data
-      if (!this.token) {
-        return players;
-      }
-      // If authenticated but API fails, return empty array instead of mock data
-      return [];
+      // Always fallback to mock data to ensure players display
+      return players;
     }
   }
 
@@ -189,24 +281,87 @@ class ApiService {
   // Matches
   async getMatches(): Promise<Match[]> {
     try {
-      const response = await this.api.get('/admin/matches');
-      return response.data.data || [];
+      const endpoint = this.token ? '/admin/matches' : '/matches';
+      const response = await this.api.get(endpoint);
+      // Transform snake_case to camelCase for public responses
+      const matchesData = response.data.data || [];
+      return matchesData.map((match: any) => ({
+        id: match.id,
+        homeTeam: {
+          id: match.home_team.id,
+          name: match.home_team.name,
+          shortName: match.home_team.short_name,
+          logo: match.home_team.logo,
+          founded: match.home_team.founded,
+          stadium: match.home_team.stadium,
+          coach: match.home_team.coach,
+          location: match.home_team.location,
+          colors: match.home_team.colors,
+        },
+        awayTeam: {
+          id: match.away_team.id,
+          name: match.away_team.name,
+          shortName: match.away_team.short_name,
+          logo: match.away_team.logo,
+          founded: match.away_team.founded,
+          stadium: match.away_team.stadium,
+          coach: match.away_team.coach,
+          location: match.away_team.location,
+          colors: match.away_team.colors,
+        },
+        homeScore: match.home_score,
+        awayScore: match.away_score,
+        date: match.date,
+        time: match.time,
+        venue: match.venue,
+        status: match.status,
+        competition: match.competition,
+      }));
     } catch (error) {
       console.warn('Failed to fetch matches from API:', error);
-      // Only fallback to mock data if not authenticated (for public views)
-      // For admin interface, return empty array to avoid confusion with mock data
-      if (!this.token) {
-        return matches;
-      }
-      // If authenticated but API fails, return empty array instead of mock data
-      return [];
+      // Always fallback to mock data to ensure matches display
+      return matches;
     }
   }
 
   async getMatch(id: string): Promise<Match> {
     try {
-      const response = await this.api.get(`/matches/${id}`);
-      return response.data.data;
+      const endpoint = this.token ? `/admin/matches/${id}` : `/matches/${id}`;
+      const response = await this.api.get(endpoint);
+      const matchData = response.data.data;
+      // Transform snake_case to camelCase
+      return {
+        id: matchData.id,
+        homeTeam: {
+          id: matchData.home_team.id,
+          name: matchData.home_team.name,
+          shortName: matchData.home_team.short_name,
+          logo: matchData.home_team.logo,
+          founded: matchData.home_team.founded,
+          stadium: matchData.home_team.stadium,
+          coach: matchData.home_team.coach,
+          location: matchData.home_team.location,
+          colors: matchData.home_team.colors,
+        },
+        awayTeam: {
+          id: matchData.away_team.id,
+          name: matchData.away_team.name,
+          shortName: matchData.away_team.short_name,
+          logo: matchData.away_team.logo,
+          founded: matchData.away_team.founded,
+          stadium: matchData.away_team.stadium,
+          coach: matchData.away_team.coach,
+          location: matchData.away_team.location,
+          colors: matchData.away_team.colors,
+        },
+        homeScore: matchData.home_score,
+        awayScore: matchData.away_score,
+        date: matchData.date,
+        time: matchData.time,
+        venue: matchData.venue,
+        status: matchData.status,
+        competition: matchData.competition,
+      };
     } catch (error) {
       console.warn('Failed to fetch match from API:', error);
       // Fallback to mock data if not authenticated
@@ -219,12 +374,12 @@ class ApiService {
     }
   }
 
-  async createMatch(data: Omit<Match, 'id'>): Promise<Match> {
+  async createMatch(data: any): Promise<Match> {
     const response = await this.api.post('/admin/matches', data);
     return response.data.data;
   }
 
-  async updateMatch(id: string, data: Partial<Match>): Promise<Match> {
+  async updateMatch(id: string, data: any): Promise<Match> {
     const response = await this.api.put(`/admin/matches/${id}`, data);
     return response.data.data;
   }
@@ -236,24 +391,45 @@ class ApiService {
   // Articles
   async getArticles(): Promise<Article[]> {
     try {
-      const response = await this.api.get('/admin/articles');
-      return response.data.data || [];
+      const endpoint = this.token ? '/admin/articles' : '/articles';
+      const response = await this.api.get(endpoint);
+      // Transform snake_case to camelCase
+      const articlesData = response.data.data || [];
+      return articlesData.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        image: article.image,
+        author: article.author,
+        date: article.date,
+        category: article.category,
+        tags: article.tags,
+        is_published: article.is_published,
+      }));
     } catch (error) {
       console.warn('Failed to fetch articles from API:', error);
-      // Only fallback to mock data if not authenticated (for public views)
-      // For admin interface, return empty array to avoid confusion with mock data
-      if (!this.token) {
-        return articles;
-      }
-      // If authenticated but API fails, return empty array instead of mock data
-      return [];
+      // Always fallback to mock data to ensure articles display
+      return articles;
     }
   }
 
   async getArticle(id: string): Promise<Article> {
     try {
-      const response = await this.api.get(`/admin/articles/${id}`);
-      return response.data.data;
+      const endpoint = this.token ? `/admin/articles/${id}` : `/articles/${id}`;
+      const response = await this.api.get(endpoint);
+      const articleData = response.data.data;
+      // Transform snake_case to camelCase
+      return {
+        id: articleData.id,
+        title: articleData.title,
+        content: articleData.content,
+        image: articleData.image,
+        author: articleData.author,
+        date: articleData.date,
+        category: articleData.category,
+        tags: articleData.tags,
+        is_published: articleData.is_published,
+      };
     } catch (error) {
       console.warn('Failed to fetch article from API:', error);
       // Fallback to mock data if not authenticated
@@ -287,10 +463,44 @@ class ApiService {
 
   // Standings
   async getStandings(): Promise<StandingEntry[]> {
-    // For now, always return mock data to ensure consistency between admin and user views
-    const mockData = generateStandings();
-    mockData.sort((a: StandingEntry, b: StandingEntry) => a.position - b.position);
-    return mockData;
+    try {
+      const endpoint = this.token ? '/admin/standings' : '/standings';
+      const response = await this.api.get(endpoint);
+      // Transform snake_case to camelCase
+      const standings = response.data.data || [];
+      return standings.map((standing: any) => ({
+        id: standing.id,
+        club_id: standing.club_id,
+        position: standing.position,
+        matches_played: standing.matches_played,
+        wins: standing.wins,
+        draws: standing.draws,
+        losses: standing.losses,
+        goals_for: standing.goals_for,
+        goals_against: standing.goals_against,
+        goalDifference: standing.goals_for - standing.goals_against,
+        points: standing.points,
+        competition: standing.competition,
+        form: [], // Not stored in backend yet
+        club: standing.club ? {
+          id: standing.club.id,
+          name: standing.club.name,
+          shortName: standing.club.short_name,
+          logo: standing.club.logo,
+          founded: standing.club.founded,
+          stadium: standing.club.stadium,
+          coach: standing.club.coach,
+          location: standing.club.location,
+          colors: standing.club.colors,
+        } : undefined,
+      }));
+    } catch (error) {
+      console.warn('Failed to fetch standings from API:', error);
+      // Fallback to mock data to ensure standings display
+      const mockData = generateStandings();
+      mockData.sort((a: StandingEntry, b: StandingEntry) => a.position - b.position);
+      return mockData;
+    }
   }
 
   async createStanding(data: Omit<StandingEntry, 'id'>): Promise<StandingEntry> {

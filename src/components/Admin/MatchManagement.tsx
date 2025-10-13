@@ -66,10 +66,10 @@ const MatchManagement: React.FC = () => {
 
       // Prepare data to match expected API format
       const matchData = {
-        homeTeam,
-        awayTeam,
-        homeScore: formData.homeScore,
-        awayScore: formData.awayScore,
+        home_team_id: formData.home_team_id,
+        away_team_id: formData.away_team_id,
+        home_score: formData.homeScore,
+        away_score: formData.awayScore,
         date: formData.date,
         time: formData.time,
         venue: formData.venue,
@@ -267,10 +267,8 @@ const MatchManagement: React.FC = () => {
                 <select
                   value={formData.status}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === 'upcoming' || value === 'live' || value === 'completed' || value === 'cancelled') {
-                      setFormData({ ...formData, status: value });
-                    }
+                    const value = e.target.value as MatchFormData['status'];
+                    setFormData({ ...formData, status: value });
                   }}
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                   required

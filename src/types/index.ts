@@ -33,7 +33,7 @@ export interface Club {
   name: string;
   shortName: string;
   logo: string;
-  founded: number;
+  founded: number | null;
   stadium: string;
   coach: string;
   location: string;

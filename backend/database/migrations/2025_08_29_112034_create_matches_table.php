@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('time');
             $table->string('venue');
-            $table->enum('status', ['upcoming', 'live', 'completed'])->default('upcoming');
+            $table->enum('status', ['upcoming', 'live', 'completed', 'cancelled'])->default('upcoming');
             $table->string('competition');
             $table->boolean('is_active')->default(true);
             $table->timestamps();

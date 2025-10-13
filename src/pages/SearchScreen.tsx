@@ -211,7 +211,7 @@ const SearchScreen: React.FC = () => {
                           <div className="text-lg font-bold text-gray-900">
                             {match.homeScore !== null ? match.homeScore : '-'} - {match.awayScore !== null ? match.awayScore : '-'}
                           </div>
-                          <p className="text-xs text-gray-600">{match.status === 'completed' ? 'Terminé' : match.status === 'live' ? 'En cours' : 'À venir'}</p>
+                          <p className="text-xs text-gray-600">{match.status === 'completed' ? 'Terminé' : match.status === 'live' ? 'En cours' : match.status === 'cancelled' ? 'Annulé' : 'À venir'}</p>
                         </div>
                         <div className="text-center">
                           <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-8 h-8 mx-auto mb-1" />

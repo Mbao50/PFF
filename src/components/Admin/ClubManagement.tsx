@@ -4,9 +4,9 @@ import { Club } from '../../types';
 
 interface ClubFormData {
   name: string;
-  short_name: string;
+  shortName: string;
   logo: string;
-  founded: string;
+  founded: number | null;
   stadium: string;
   coach: string;
   location: string;
@@ -20,14 +20,16 @@ const ClubManagement: React.FC = () => {
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [formData, setFormData] = useState<ClubFormData>({
     name: '',
-    short_name: '',
+    shortName: '',
     logo: '',
-    founded: '',
+    founded: null,
     stadium: '',
     coach: '',
     location: '',
     colors: '',
   });
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadClubs();
@@ -47,6 +49,8 @@ const ClubManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+    setErrors({});
     try {
       if (editingClub) {
         await ApiService.updateClub(editingClub.id, formData);
@@ -57,8 +61,15 @@ const ClubManagement: React.FC = () => {
       setEditingClub(null);
       resetForm();
       loadClubs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error);
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+      } else {
+        alert('Une erreur est survenue lors de la sauvegarde.');
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -66,7 +77,7 @@ const ClubManagement: React.FC = () => {
     setEditingClub(club);
     setFormData({
       name: club.name,
-      short_name: club.short_name,
+      shortName: club.shortName,
       logo: club.logo,
       founded: club.founded,
       stadium: club.stadium,
@@ -91,14 +102,15 @@ const ClubManagement: React.FC = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      short_name: '',
+      shortName: '',
       logo: '',
-      founded: '',
+      founded: null,
       stadium: '',
       coach: '',
       location: '',
       colors: '',
     });
+    setErrors({});
   };
 
   if (loading) {
@@ -127,6 +139,18 @@ const ClubManagement: React.FC = () => {
             {editingClub ? 'Modifier le Club' : 'Nouveau Club'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {Object.keys(errors).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <h4 className="text-red-800 font-medium">Erreurs de validation:</h4>
+                <ul className="mt-2 text-sm text-red-700">
+                  {Object.entries(errors).map(([field, messages]) => (
+                    <li key={field}>
+                      <strong className="capitalize">{field.replace('_', ' ')}:</strong> {messages.join(', ')}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nom</label>
@@ -134,19 +158,25 @@ const ClubManagement: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.name ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nom court</label>
                 <input
                   type="text"
-                  value={formData.short_name}
-                  onChange={(e) => setFormData({ ...formData, short_name: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  value={formData.shortName}
+                  onChange={(e) => setFormData({ ...formData, shortName: e.target.value })}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.short_name ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {errors.short_name && <p className="mt-1 text-sm text-red-600">{errors.short_name.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Logo URL</label>
@@ -154,17 +184,27 @@ const ClubManagement: React.FC = () => {
                   type="url"
                   value={formData.logo}
                   onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.logo ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {errors.logo && <p className="mt-1 text-sm text-red-600">{errors.logo.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Année de fondation</label>
                 <input
                   type="number"
-                  value={formData.founded}
-                  onChange={(e) => setFormData({ ...formData, founded: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  value={formData.founded || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ ...formData, founded: value === '' ? null : parseInt(value) || null });
+                  }}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.founded ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="ex: 1950"
                 />
+                {errors.founded && <p className="mt-1 text-sm text-red-600">{errors.founded.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Stade</label>
@@ -172,8 +212,12 @@ const ClubManagement: React.FC = () => {
                   type="text"
                   value={formData.stadium}
                   onChange={(e) => setFormData({ ...formData, stadium: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.stadium ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  required
                 />
+                {errors.stadium && <p className="mt-1 text-sm text-red-600">{errors.stadium.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Entraîneur</label>
@@ -181,8 +225,12 @@ const ClubManagement: React.FC = () => {
                   type="text"
                   value={formData.coach}
                   onChange={(e) => setFormData({ ...formData, coach: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.coach ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  required
                 />
+                {errors.coach && <p className="mt-1 text-sm text-red-600">{errors.coach.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Localisation</label>
@@ -190,8 +238,12 @@ const ClubManagement: React.FC = () => {
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.location ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  required
                 />
+                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Couleurs</label>
@@ -199,9 +251,13 @@ const ClubManagement: React.FC = () => {
                   type="text"
                   value={formData.colors}
                   onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
+                    errors.colors ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="ex: Rouge et Blanc"
+                  required
                 />
+                {errors.colors && <p className="mt-1 text-sm text-red-600">{errors.colors.join(', ')}</p>}
               </div>
             </div>
             <div className="flex justify-end space-x-3">
@@ -218,9 +274,10 @@ const ClubManagement: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                disabled={saving}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
-                {editingClub ? 'Mettre à jour' : 'Créer'}
+                {saving ? 'Sauvegarde...' : (editingClub ? 'Mettre à jour' : 'Créer')}
               </button>
             </div>
           </form>
@@ -267,7 +324,7 @@ const ClubManagement: React.FC = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {club.short_name}
+                  {club.shortName}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {club.stadium}

@@ -200,12 +200,14 @@ const MatchDetail: React.FC = () => {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-2">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                match.status === 'upcoming' ? 'bg-yellow-400 text-green-900' : 
-                match.status === 'live' ? 'bg-red-500 text-white' : 
+                match.status === 'upcoming' ? 'bg-yellow-400 text-green-900' :
+                match.status === 'live' ? 'bg-red-500 text-white' :
+                match.status === 'cancelled' ? 'bg-gray-500 text-white' :
                 'bg-gray-200 text-gray-700'
               }`}>
-                {match.status === 'upcoming' ? 'À venir' : 
-                 match.status === 'live' ? 'EN DIRECT' : 
+                {match.status === 'upcoming' ? 'À venir' :
+                 match.status === 'live' ? 'EN DIRECT' :
+                 match.status === 'cancelled' ? 'Annulé' :
                  'Terminé'}
               </span>
             </div>
@@ -473,6 +475,18 @@ const MatchDetail: React.FC = () => {
           </div>
           <div className="p-6">
             <p className="text-gray-600">Ce match est prévu pour bientôt. Revenez plus tard pour les détails.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Cancelled match info */}
+      {match.status === 'cancelled' && (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-gray-700 text-white p-4">
+            <h2 className="text-xl font-bold">Match annulé</h2>
+          </div>
+          <div className="p-6">
+            <p className="text-gray-600">Ce match a été annulé. Pour plus d'informations, contactez l'organisation.</p>
           </div>
         </div>
       )}

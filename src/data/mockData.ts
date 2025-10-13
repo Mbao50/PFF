@@ -5,7 +5,7 @@ export const clubs: Club[] = [
     id: '1',
     name: 'ASC Jaraaf',
     shortName: 'Jaraaf',
-    logo: 'https://images.pexels.com/photos/1667583/pexels-photo-1667583.jpeg?auto=compress&cs=tinysrgb&w=100',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/ASC_Jaraaf_logo.svg/200px-ASC_Jaraaf_logo.svg.png',
     founded: 1969,
     stadium: 'Stade Demba Diop',
     coach: 'Malick Daf',
@@ -16,7 +16,7 @@ export const clubs: Club[] = [
     id: '2',
     name: 'Casa Sports',
     shortName: 'Casa',
-    logo: 'https://images.pexels.com/photos/1005697/pexels-photo-1005697.jpeg?auto=compress&cs=tinysrgb&w=100',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Casa_Sports_FC_logo.svg/200px-Casa_Sports_FC_logo.svg.png',
     founded: 1960,
     stadium: 'Stade Aline Sitoe Diatta',
     coach: 'Ansou Diadhiou',
@@ -27,7 +27,7 @@ export const clubs: Club[] = [
     id: '3',
     name: 'AS Douanes',
     shortName: 'Douanes',
-    logo: 'https://images.pexels.com/photos/1146278/pexels-photo-1146278.jpeg?auto=compress&cs=tinysrgb&w=100',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/AS_Douanes_%28Senegal%29_logo.svg/200px-AS_Douanes_%28Senegal%29_logo.svg.png',
     founded: 1980,
     stadium: 'Stade Amadou Barry',
     coach: 'Mamadou Guèye',
@@ -38,7 +38,7 @@ export const clubs: Club[] = [
     id: '4',
     name: 'Génération Foot',
     shortName: 'GF',
-    logo: 'https://images.pexels.com/photos/3775708/pexels-photo-3775708.jpeg?auto=compress&cs=tinysrgb&w=100',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/G%C3%A9n%C3%A9ration_Foot_logo.svg/200px-G%C3%A9n%C3%A9ration_Foot_logo.svg.png',
     founded: 2000,
     stadium: 'Stade Déni Biram Ndao',
     coach: 'Balla Djiba',
@@ -49,7 +49,7 @@ export const clubs: Club[] = [
     id: '5',
     name: 'Teungueth FC',
     shortName: 'TFC',
-    logo: 'https://images.pexels.com/photos/1884574/pexels-photo-1884574.jpeg?auto=compress&cs=tinysrgb&w=100',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Teungueth_FC_logo.svg/200px-Teungueth_FC_logo.svg.png',
     founded: 2010,
     stadium: 'Stade Ngalandou Diouf',
     coach: 'Ndiambour Pape',
@@ -60,7 +60,7 @@ export const clubs: Club[] = [
     id: '6',
     name: 'US Gorée',
     shortName: 'Gorée',
-    logo: 'https://images.pexels.com/photos/18685188/pexels-photo-18685188/free-photo-of-circular-emblem-of-a-professional-football-team.jpeg?auto=compress&cs=tinysrgb&w=100',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/US_Gor%C3%A9e_logo.svg/200px-US_Gor%C3%A9e_logo.svg.png',
     founded: 1933,
     stadium: 'Stade Demba Diop',
     coach: 'Mbaye Badji',
@@ -256,7 +256,8 @@ export const articles: Article[] = [
     author: 'Mamadou Diallo',
     date: '2023-10-11',
     category: 'news',
-    tags: ['ASC Jaraaf', 'Casa Sports', 'Ligue 1']
+    tags: ['ASC Jaraaf', 'Casa Sports', 'Ligue 1'],
+    is_published: true
   },
   {
     id: '2',
@@ -266,7 +267,8 @@ export const articles: Article[] = [
     author: 'Fatou Sow',
     date: '2023-10-14',
     category: 'transfer',
-    tags: ['Teungueth FC', 'Transfert', 'Académie']
+    tags: ['Teungueth FC', 'Transfert', 'Académie'],
+    is_published: true
   },
   {
     id: '3',
@@ -276,7 +278,8 @@ export const articles: Article[] = [
     author: 'Omar Diop',
     date: '2023-10-16',
     category: 'interview',
-    tags: ['AS Douanes', 'Coach', 'Interview']
+    tags: ['AS Douanes', 'Coach', 'Interview'],
+    is_published: true
   },
   {
     id: '4',
@@ -286,7 +289,8 @@ export const articles: Article[] = [
     author: 'Abdoulaye Ndiaye',
     date: '2023-10-19',
     category: 'analysis',
-    tags: ['Teungueth FC', 'US Gorée', 'Tactique']
+    tags: ['Teungueth FC', 'US Gorée', 'Tactique'],
+    is_published: true
   }
 ];
 

@@ -20,6 +20,11 @@ const Clubs: React.FC = () => {
     };
 
     loadClubs();
+
+    // Refresh clubs every 2 minutes to show newly created clubs without jumping
+    const interval = setInterval(loadClubs, 120000);
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

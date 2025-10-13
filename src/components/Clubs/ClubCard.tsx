@@ -25,7 +25,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club }) => {
       <div className="p-4 space-y-3">
         <div className="flex items-center text-sm text-gray-600">
           <Calendar size={16} className="mr-2 text-green-700" />
-          <span>Fondé en {club.founded}</span>
+          <span>Fondé en {club.founded || 'Non spécifié'}</span>
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <MapPin size={16} className="mr-2 text-green-700" />

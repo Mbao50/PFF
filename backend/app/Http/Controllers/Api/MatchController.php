@@ -39,7 +39,7 @@ class MatchController extends Controller
             'date' => 'required|date|after_or_equal:today',
             'time' => 'required|date_format:H:i',
             'venue' => 'required|string|max:255',
-            'status' => 'required|in:upcoming,live,completed',
+            'status' => 'required|in:upcoming,live,completed,cancelled',
             'competition' => 'required|string|max:255',
         ]);
 
@@ -93,7 +93,7 @@ class MatchController extends Controller
             'date' => 'sometimes|required|date',
             'time' => 'sometimes|required|date_format:H:i',
             'venue' => 'sometimes|required|string|max:255',
-            'status' => 'sometimes|required|in:upcoming,live,completed',
+            'status' => 'sometimes|required|in:upcoming,live,completed,cancelled',
             'competition' => 'sometimes|required|string|max:255',
         ]);
 

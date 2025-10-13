@@ -19,12 +19,14 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
       <div className="bg-green-700 text-white p-3 flex justify-between items-center">
         <span className="font-medium">{match.competition}</span>
         <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-          match.status === 'upcoming' ? 'bg-yellow-400 text-green-900' : 
-          match.status === 'live' ? 'bg-red-500 text-white animate-pulse' : 
+          match.status === 'upcoming' ? 'bg-yellow-400 text-green-900' :
+          match.status === 'live' ? 'bg-red-500 text-white animate-pulse' :
+          match.status === 'cancelled' ? 'bg-gray-500 text-white' :
           'bg-gray-200 text-gray-700'
         }`}>
-          {match.status === 'upcoming' ? 'À venir' : 
-           match.status === 'live' ? 'EN DIRECT' : 
+          {match.status === 'upcoming' ? 'À venir' :
+           match.status === 'live' ? 'EN DIRECT' :
+           match.status === 'cancelled' ? 'Annulé' :
            'Terminé'}
         </span>
       </div>
@@ -87,8 +89,9 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           to={`/matches/${match.id}`}
           className="block w-full text-center bg-green-700 text-white rounded py-2 font-medium hover:bg-green-800 transition duration-300"
         >
-          {match.status === 'completed' ? 'Voir le résumé' : 
-           match.status === 'live' ? 'Suivre en direct' : 
+          {match.status === 'completed' ? 'Voir le résumé' :
+           match.status === 'live' ? 'Suivre en direct' :
+           match.status === 'cancelled' ? 'Match annulé' :
            'Plus d\'informations'}
         </Link>
       </div>

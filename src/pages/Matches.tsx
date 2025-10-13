@@ -7,7 +7,7 @@ const Matches: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   // State for filtering matches
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all');
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -22,6 +22,11 @@ const Matches: React.FC = () => {
     };
 
     loadMatches();
+
+    // Refresh matches every 2 minutes to show newly created matches without jumping
+    const interval = setInterval(loadMatches, 120000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Filter matches based on selection
@@ -72,12 +77,22 @@ const Matches: React.FC = () => {
           <button
             onClick={() => setFilter('completed')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 ${
-              filter === 'completed' 
-                ? 'bg-green-700 text-white' 
+              filter === 'completed'
+                ? 'bg-green-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Terminés
+          </button>
+          <button
+            onClick={() => setFilter('cancelled')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition duration-150 ${
+              filter === 'cancelled'
+                ? 'bg-green-700 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Annulés
           </button>
         </div>
       </div>

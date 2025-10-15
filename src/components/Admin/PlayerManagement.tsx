@@ -9,6 +9,7 @@ interface PlayerFormData {
   nationality: string;
   clubId: string;
   image: string;
+  image_file?: File;
   height: string;
   weight: string;
   appearances: number;
@@ -261,15 +262,28 @@ const PlayerManagement: React.FC = () => {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${getFieldError('image') ? 'border-red-500' : 'border-gray-300'}`}
-                />
+                <label className="block text-sm font-medium text-gray-700">Image</label>
+                <div className="mt-1 space-y-2">
+                  <input
+                    type="url"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className={`block w-full border rounded-md px-3 py-2 ${getFieldError('image') ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="URL de l'image"
+                  />
+                  <div className="text-sm text-gray-500">OU</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFormData({ ...formData, image_file: e.target.files?.[0] })}
+                    className={`block w-full border rounded-md px-3 py-2 ${getFieldError('image_file') ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                </div>
                 {getFieldError('image') && (
                   <p className="mt-1 text-sm text-red-600">{getFieldError('image')}</p>
+                )}
+                {getFieldError('image_file') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('image_file')}</p>
                 )}
               </div>
               <div>

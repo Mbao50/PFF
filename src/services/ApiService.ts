@@ -82,19 +82,43 @@ class ApiService {
     }
   }
 
-  async createClub(data: Omit<Club, 'id'>): Promise<Club> {
-    // Convert camelCase to snake_case for backend
-    const backendData = {
-      name: data.name,
-      short_name: data.shortName,
-      logo: data.logo,
-      founded: data.founded,
-      stadium: data.stadium,
-      coach: data.coach,
-      location: data.location,
-      colors: data.colors,
-    };
-    const response = await this.api.post('/admin/clubs', backendData);
+  async createClub(data: Omit<Club, 'id'> & { logo_file?: File }): Promise<Club> {
+    let response;
+
+    // Check if file upload is needed
+    if ((data as any).logo_file) {
+      // Use FormData for file upload
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('short_name', data.shortName);
+      formData.append('logo', data.logo);
+      formData.append('logo_file', (data as any).logo_file);
+      if (data.founded !== null) formData.append('founded', data.founded.toString());
+      formData.append('stadium', data.stadium);
+      formData.append('coach', data.coach);
+      formData.append('location', data.location);
+      formData.append('colors', data.colors);
+
+      response = await this.api.post('/admin/clubs', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      // Use JSON for regular data
+      const backendData = {
+        name: data.name,
+        short_name: data.shortName,
+        logo: data.logo,
+        founded: data.founded,
+        stadium: data.stadium,
+        coach: data.coach,
+        location: data.location,
+        colors: data.colors,
+      };
+      response = await this.api.post('/admin/clubs', backendData);
+    }
+
     // Transform response back to camelCase
     const club = response.data.data;
     return {
@@ -110,19 +134,43 @@ class ApiService {
     };
   }
 
-  async updateClub(id: string, data: Partial<Club>): Promise<Club> {
-    // Convert camelCase to snake_case for backend
-    const backendData: any = {};
-    if (data.name !== undefined) backendData.name = data.name;
-    if (data.shortName !== undefined) backendData.short_name = data.shortName;
-    if (data.logo !== undefined) backendData.logo = data.logo;
-    if (data.founded !== undefined) backendData.founded = data.founded;
-    if (data.stadium !== undefined) backendData.stadium = data.stadium;
-    if (data.coach !== undefined) backendData.coach = data.coach;
-    if (data.location !== undefined) backendData.location = data.location;
-    if (data.colors !== undefined) backendData.colors = data.colors;
+  async updateClub(id: string, data: Partial<Club> & { logo_file?: File }): Promise<Club> {
+    let response;
 
-    const response = await this.api.put(`/admin/clubs/${id}`, backendData);
+    // Check if file upload is needed
+    if ((data as any).logo_file) {
+      // Use FormData for file upload
+      const formData = new FormData();
+      if (data.name !== undefined) formData.append('name', data.name);
+      if (data.shortName !== undefined) formData.append('short_name', data.shortName);
+      if (data.logo !== undefined) formData.append('logo', data.logo);
+      formData.append('logo_file', (data as any).logo_file);
+      if (data.founded !== undefined && data.founded !== null) formData.append('founded', data.founded.toString());
+      if (data.stadium !== undefined) formData.append('stadium', data.stadium);
+      if (data.coach !== undefined) formData.append('coach', data.coach);
+      if (data.location !== undefined) formData.append('location', data.location);
+      if (data.colors !== undefined) formData.append('colors', data.colors);
+
+      response = await this.api.put(`/admin/clubs/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      // Use JSON for regular data
+      const backendData: any = {};
+      if (data.name !== undefined) backendData.name = data.name;
+      if (data.shortName !== undefined) backendData.short_name = data.shortName;
+      if (data.logo !== undefined) backendData.logo = data.logo;
+      if (data.founded !== undefined) backendData.founded = data.founded;
+      if (data.stadium !== undefined) backendData.stadium = data.stadium;
+      if (data.coach !== undefined) backendData.coach = data.coach;
+      if (data.location !== undefined) backendData.location = data.location;
+      if (data.colors !== undefined) backendData.colors = data.colors;
+
+      response = await this.api.put(`/admin/clubs/${id}`, backendData);
+    }
+
     // Transform response back to camelCase
     const club = response.data.data;
     return {
@@ -198,24 +246,53 @@ class ApiService {
     }
   }
 
-  async createPlayer(data: Omit<Player, 'id'>): Promise<Player> {
-    // Convert camelCase to snake_case for backend
-    const backendData = {
-      name: data.name,
-      position: data.position,
-      birthdate: data.birthdate,
-      nationality: data.nationality,
-      club_id: data.clubId,
-      image: data.image,
-      height: data.height,
-      weight: data.weight,
-      appearances: data.appearances,
-      goals: data.goals,
-      assists: data.assists,
-      yellow_cards: data.yellowCards,
-      red_cards: data.redCards,
-    };
-    const response = await this.api.post('/admin/players', backendData);
+  async createPlayer(data: Omit<Player, 'id'> & { image_file?: File }): Promise<Player> {
+    let response;
+
+    // Check if file upload is needed
+    if ((data as any).image_file) {
+      // Use FormData for file upload
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('position', data.position);
+      formData.append('birthdate', data.birthdate);
+      formData.append('nationality', data.nationality);
+      formData.append('club_id', data.clubId);
+      formData.append('image', data.image);
+      formData.append('image_file', (data as any).image_file);
+      formData.append('height', data.height);
+      formData.append('weight', data.weight);
+      formData.append('appearances', data.appearances.toString());
+      formData.append('goals', data.goals.toString());
+      formData.append('assists', data.assists.toString());
+      formData.append('yellow_cards', data.yellowCards.toString());
+      formData.append('red_cards', data.redCards.toString());
+
+      response = await this.api.post('/admin/players', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      // Use JSON for regular data
+      const backendData = {
+        name: data.name,
+        position: data.position,
+        birthdate: data.birthdate,
+        nationality: data.nationality,
+        club_id: data.clubId,
+        image: data.image,
+        height: data.height,
+        weight: data.weight,
+        appearances: data.appearances,
+        goals: data.goals,
+        assists: data.assists,
+        yellow_cards: data.yellowCards,
+        red_cards: data.redCards,
+      };
+      response = await this.api.post('/admin/players', backendData);
+    }
+
     // Transform response back to camelCase
     const player = response.data.data;
     return {
@@ -236,24 +313,53 @@ class ApiService {
     };
   }
 
-  async updatePlayer(id: string, data: Partial<Player>): Promise<Player> {
-    // Convert camelCase to snake_case for backend
-    const backendData: any = {};
-    if (data.name !== undefined) backendData.name = data.name;
-    if (data.position !== undefined) backendData.position = data.position;
-    if (data.birthdate !== undefined) backendData.birthdate = data.birthdate;
-    if (data.nationality !== undefined) backendData.nationality = data.nationality;
-    if (data.clubId !== undefined) backendData.club_id = data.clubId;
-    if (data.image !== undefined) backendData.image = data.image;
-    if (data.height !== undefined) backendData.height = data.height;
-    if (data.weight !== undefined) backendData.weight = data.weight;
-    if (data.appearances !== undefined) backendData.appearances = data.appearances;
-    if (data.goals !== undefined) backendData.goals = data.goals;
-    if (data.assists !== undefined) backendData.assists = data.assists;
-    if (data.yellowCards !== undefined) backendData.yellow_cards = data.yellowCards;
-    if (data.redCards !== undefined) backendData.red_cards = data.redCards;
+  async updatePlayer(id: string, data: Partial<Player> & { image_file?: File }): Promise<Player> {
+    let response;
 
-    const response = await this.api.put(`/admin/players/${id}`, backendData);
+    // Check if file upload is needed
+    if ((data as any).image_file) {
+      // Use FormData for file upload
+      const formData = new FormData();
+      if (data.name !== undefined) formData.append('name', data.name);
+      if (data.position !== undefined) formData.append('position', data.position);
+      if (data.birthdate !== undefined) formData.append('birthdate', data.birthdate);
+      if (data.nationality !== undefined) formData.append('nationality', data.nationality);
+      if (data.clubId !== undefined) formData.append('club_id', data.clubId);
+      if (data.image !== undefined) formData.append('image', data.image);
+      formData.append('image_file', (data as any).image_file);
+      if (data.height !== undefined) formData.append('height', data.height);
+      if (data.weight !== undefined) formData.append('weight', data.weight);
+      if (data.appearances !== undefined) formData.append('appearances', data.appearances.toString());
+      if (data.goals !== undefined) formData.append('goals', data.goals.toString());
+      if (data.assists !== undefined) formData.append('assists', data.assists.toString());
+      if (data.yellowCards !== undefined) formData.append('yellow_cards', data.yellowCards.toString());
+      if (data.redCards !== undefined) formData.append('red_cards', data.redCards.toString());
+
+      response = await this.api.put(`/admin/players/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      // Use JSON for regular data
+      const backendData: any = {};
+      if (data.name !== undefined) backendData.name = data.name;
+      if (data.position !== undefined) backendData.position = data.position;
+      if (data.birthdate !== undefined) backendData.birthdate = data.birthdate;
+      if (data.nationality !== undefined) backendData.nationality = data.nationality;
+      if (data.clubId !== undefined) backendData.club_id = data.clubId;
+      if (data.image !== undefined) backendData.image = data.image;
+      if (data.height !== undefined) backendData.height = data.height;
+      if (data.weight !== undefined) backendData.weight = data.weight;
+      if (data.appearances !== undefined) backendData.appearances = data.appearances;
+      if (data.goals !== undefined) backendData.goals = data.goals;
+      if (data.assists !== undefined) backendData.assists = data.assists;
+      if (data.yellowCards !== undefined) backendData.yellow_cards = data.yellowCards;
+      if (data.redCards !== undefined) backendData.red_cards = data.redCards;
+
+      response = await this.api.put(`/admin/players/${id}`, backendData);
+    }
+
     // Transform response back to camelCase
     const player = response.data.data;
     return {

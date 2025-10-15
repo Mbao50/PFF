@@ -31,6 +31,7 @@ class ClubController extends Controller
             'name' => 'required|string|max:255',
             'short_name' => 'required|string|max:50',
             'logo' => 'nullable|string|url',
+            'logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'founded' => 'nullable|integer|min:1800|max:' . (date('Y') + 1),
             'stadium' => 'required|string|max:255',
             'coach' => 'required|string|max:255',
@@ -48,6 +49,13 @@ class ClubController extends Controller
 
         $data = $request->all();
         $data['is_active'] = true;
+
+        // Handle logo upload
+        if ($request->hasFile('logo_file')) {
+            $logoPath = $request->file('logo_file')->store('images/clubs', 'public');
+            $data['logo'] = asset('storage/' . $logoPath);
+        }
+
         $club = Club::create($data);
 
         return response()->json([
@@ -84,6 +92,7 @@ class ClubController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'short_name' => 'sometimes|required|string|max:50',
             'logo' => 'sometimes|nullable|string|url',
+            'logo_file' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'founded' => 'sometimes|nullable|integer|min:1800|max:' . (date('Y') + 1),
             'stadium' => 'sometimes|required|string|max:255',
             'coach' => 'sometimes|required|string|max:255',
@@ -99,7 +108,15 @@ class ClubController extends Controller
             ], 422);
         }
 
-        $club->update($request->all());
+        $data = $request->all();
+
+        // Handle logo upload
+        if ($request->hasFile('logo_file')) {
+            $logoPath = $request->file('logo_file')->store('images/clubs', 'public');
+            $data['logo'] = asset('storage/' . $logoPath);
+        }
+
+        $club->update($data);
 
         return response()->json([
             'success' => true,

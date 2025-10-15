@@ -34,6 +34,7 @@ class PlayerController extends Controller
             'nationality' => 'required|string|max:100',
             'club_id' => 'required|uuid|exists:clubs,id',
             'image' => 'nullable|string|url',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'height' => 'nullable|string|max:20',
             'weight' => 'nullable|string|max:20',
             'appearances' => 'nullable|integer|min:0',
@@ -53,6 +54,13 @@ class PlayerController extends Controller
 
         $data = $request->all();
         $data['is_active'] = true;
+
+        // Handle image upload
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('images/players', 'public');
+            $data['image'] = asset('storage/' . $imagePath);
+        }
+
         $player = Player::create($data);
 
         return response()->json([
@@ -92,6 +100,7 @@ class PlayerController extends Controller
             'nationality' => 'sometimes|required|string|max:100',
             'club_id' => 'sometimes|required|uuid|exists:clubs,id',
             'image' => 'sometimes|nullable|string|url',
+            'image_file' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'height' => 'nullable|string|max:20',
             'weight' => 'nullable|string|max:20',
             'appearances' => 'sometimes|nullable|integer|min:0',
@@ -109,7 +118,15 @@ class PlayerController extends Controller
             ], 422);
         }
 
-        $player->update($request->all());
+        $data = $request->all();
+
+        // Handle image upload
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('images/players', 'public');
+            $data['image'] = asset('storage/' . $imagePath);
+        }
+
+        $player->update($data);
 
         return response()->json([
             'success' => true,

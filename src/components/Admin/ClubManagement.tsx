@@ -6,6 +6,7 @@ interface ClubFormData {
   name: string;
   shortName: string;
   logo: string;
+  logo_file?: File;
   founded: number | null;
   stadium: string;
   coach: string;
@@ -179,16 +180,29 @@ const ClubManagement: React.FC = () => {
                 {errors.short_name && <p className="mt-1 text-sm text-red-600">{errors.short_name.join(', ')}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Logo URL</label>
-                <input
-                  type="url"
-                  value={formData.logo}
-                  onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  className={`mt-1 block w-full border rounded-md px-3 py-2 ${
-                    errors.logo ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
+                <label className="block text-sm font-medium text-gray-700">Logo</label>
+                <div className="mt-1 space-y-2">
+                  <input
+                    type="url"
+                    value={formData.logo}
+                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                    className={`block w-full border rounded-md px-3 py-2 ${
+                      errors.logo ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="URL du logo"
+                  />
+                  <div className="text-sm text-gray-500">OU</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFormData({ ...formData, logo_file: e.target.files?.[0] })}
+                    className={`block w-full border rounded-md px-3 py-2 ${
+                      errors.logo_file ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  />
+                </div>
                 {errors.logo && <p className="mt-1 text-sm text-red-600">{errors.logo.join(', ')}</p>}
+                {errors.logo_file && <p className="mt-1 text-sm text-red-600">{errors.logo_file.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Année de fondation</label>

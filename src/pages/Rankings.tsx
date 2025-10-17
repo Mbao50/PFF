@@ -5,12 +5,22 @@ import { StandingEntry } from '../types';
 const Rankings: React.FC = () => {
   const [standings, setStandings] = useState<StandingEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCompetition, setSelectedCompetition] = useState<string>('Ligue 1 Sénégalaise');
+  const [availableCompetitions, setAvailableCompetitions] = useState<string[]>([]);
 
   useEffect(() => {
     const loadStandings = async () => {
       try {
         const standingsData = await ApiService.getStandings();
-        setStandings(standingsData);
+        // Extraire les compétitions disponibles
+        const competitions = [...new Set(standingsData.map((standing: StandingEntry) => standing.competition))];
+        setAvailableCompetitions(competitions);
+
+        // Filtrer par compétition sélectionnée et trier par position
+        const filteredStandings = standingsData
+          .filter((standing: StandingEntry) => standing.competition === selectedCompetition)
+          .sort((a: StandingEntry, b: StandingEntry) => a.position - b.position);
+        setStandings(filteredStandings);
       } catch (error) {
         console.error('Error loading standings:', error);
       } finally {
@@ -19,7 +29,7 @@ const Rankings: React.FC = () => {
     };
 
     loadStandings();
-  }, []);
+  }, [selectedCompetition]);
 
   if (loading) {
     return (
@@ -53,14 +63,33 @@ const Rankings: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-green-900 mb-4">Classements</h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 mb-4">
           Consultez les classements des différentes compétitions du football sénégalais.
         </p>
+
+        {/* Sélecteur de compétition */}
+        <div className="flex items-center space-x-4">
+          <label htmlFor="competition-select" className="text-sm font-medium text-gray-700">
+            Compétition:
+          </label>
+          <select
+            id="competition-select"
+            value={selectedCompetition}
+            onChange={(e) => setSelectedCompetition(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            {availableCompetitions.map((competition) => (
+              <option key={competition} value={competition}>
+                {competition}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
         <div className="bg-green-700 text-white p-4">
-          <h2 className="text-xl font-bold">Ligue 1 Sénégalaise - Saison 2023-2024</h2>
+          <h2 className="text-xl font-bold">{selectedCompetition} - Saison 2023-2024</h2>
         </div>
         
         <div className="overflow-x-auto">

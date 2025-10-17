@@ -482,12 +482,78 @@ class ApiService {
 
   async createMatch(data: any): Promise<Match> {
     const response = await this.api.post('/admin/matches', data);
-    return response.data.data;
+    const matchData = response.data.data;
+    // Transform snake_case to camelCase to match frontend Match type
+    return {
+      id: matchData.id,
+      homeTeam: {
+        id: matchData.home_team.id,
+        name: matchData.home_team.name,
+        shortName: matchData.home_team.short_name,
+        logo: matchData.home_team.logo,
+        founded: matchData.home_team.founded,
+        stadium: matchData.home_team.stadium,
+        coach: matchData.home_team.coach,
+        location: matchData.home_team.location,
+        colors: matchData.home_team.colors,
+      },
+      awayTeam: {
+        id: matchData.away_team.id,
+        name: matchData.away_team.name,
+        shortName: matchData.away_team.short_name,
+        logo: matchData.away_team.logo,
+        founded: matchData.away_team.founded,
+        stadium: matchData.away_team.stadium,
+        coach: matchData.away_team.coach,
+        location: matchData.away_team.location,
+        colors: matchData.away_team.colors,
+      },
+      homeScore: matchData.home_score,
+      awayScore: matchData.away_score,
+      date: matchData.date,
+      time: matchData.time,
+      venue: matchData.venue,
+      status: matchData.status,
+      competition: matchData.competition,
+    };
   }
 
   async updateMatch(id: string, data: any): Promise<Match> {
     const response = await this.api.put(`/admin/matches/${id}`, data);
-    return response.data.data;
+    const matchData = response.data.data;
+    // Transform snake_case to camelCase to match frontend Match type
+    return {
+      id: matchData.id,
+      homeTeam: {
+        id: matchData.home_team.id,
+        name: matchData.home_team.name,
+        shortName: matchData.home_team.short_name,
+        logo: matchData.home_team.logo,
+        founded: matchData.home_team.founded,
+        stadium: matchData.home_team.stadium,
+        coach: matchData.home_team.coach,
+        location: matchData.home_team.location,
+        colors: matchData.home_team.colors,
+      },
+      awayTeam: {
+        id: matchData.away_team.id,
+        name: matchData.away_team.name,
+        shortName: matchData.away_team.short_name,
+        logo: matchData.away_team.logo,
+        founded: matchData.away_team.founded,
+        stadium: matchData.away_team.stadium,
+        coach: matchData.away_team.coach,
+        location: matchData.away_team.location,
+        colors: matchData.away_team.colors,
+      },
+      homeScore: matchData.home_score,
+      awayScore: matchData.away_score,
+      date: matchData.date,
+      time: matchData.time,
+      venue: matchData.venue,
+      status: matchData.status,
+      competition: matchData.competition,
+    };
   }
 
   async deleteMatch(id: string): Promise<void> {

@@ -55,38 +55,57 @@ const MatchManagement: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Find the Club objects from IDs
-      const homeTeam = clubs.find(c => c.id === formData.home_team_id);
-      const awayTeam = clubs.find(c => c.id === formData.away_team_id);
-
-      if (!homeTeam || !awayTeam) {
-        console.error('Équipes non trouvées');
+      if (formData.home_team_id === formData.away_team_id) {
+        alert('Erreur: L\'équipe domicile et l\'équipe extérieur ne peuvent pas être la même.');
         return;
       }
 
+      // Find the Club objects from IDs (only validate for new matches)
+      if (!editingMatch) {
+        const homeTeam = clubs.find(c => c.id === formData.home_team_id);
+        const awayTeam = clubs.find(c => c.id === formData.away_team_id);
+
+        if (!homeTeam || !awayTeam) {
+          alert('Erreur: Équipes non trouvées. Veuillez sélectionner des équipes valides.');
+          return;
+        }
+      }
+
       // Prepare data to match expected API format
-      const matchData = {
+      const matchData: any = {
         home_team_id: formData.home_team_id,
         away_team_id: formData.away_team_id,
-        home_score: formData.homeScore,
-        away_score: formData.awayScore,
         date: formData.date,
         time: formData.time,
         venue: formData.venue,
         status: formData.status,
         competition: formData.competition,
       };
+
+      // Always include scores, even if null, to allow clearing them
+      matchData.home_score = formData.homeScore;
+      matchData.away_score = formData.awayScore;
+
       if (editingMatch) {
         await ApiService.updateMatch(editingMatch.id, matchData);
+        alert('Match mis à jour avec succès!');
       } else {
         await ApiService.createMatch(matchData);
+        alert('Match créé avec succès!');
       }
       setShowForm(false);
       setEditingMatch(null);
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error);
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const errors = Object.values(error.response.data.errors).flat().join('\n');
+        alert(`Erreurs de validation:\n${errors}`);
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Une erreur inconnue s\'est produite.';
+        alert(`Erreur lors de la sauvegarde: ${errorMessage}`);
+      }
     }
   };
 
@@ -110,9 +129,12 @@ const MatchManagement: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce match ?')) {
       try {
         await ApiService.deleteMatch(id);
+        alert('Match supprimé avec succès!');
         loadData();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors de la suppression:', error);
+        const errorMessage = error.response?.data?.message || error.message || 'Une erreur inconnue s\'est produite.';
+        alert(`Erreur lors de la suppression: ${errorMessage}`);
       }
     }
   };
@@ -180,35 +202,54 @@ const MatchManagement: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Équipe domicile</label>
-                <select
-                  value={formData.home_team_id}
-                  onChange={(e) => setFormData({ ...formData, home_team_id: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                >
-                  <option value="">Sélectionner une équipe</option>
-                  {clubs.map((club) => (
-                    <option key={club.id} value={club.id}>
-                      {club.name}
-                    </option>
-                  ))}
-                </select>
+                {editingMatch ? (
+                  <div className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100">
+                    {getMatchClubName(editingMatch, true)}
+                  </div>
+                ) : (
+                  <select
+                    value={formData.home_team_id}
+                    onChange={(e) => {
+                      const newHomeId = e.target.value;
+                      setFormData({
+                        ...formData,
+                        home_team_id: newHomeId,
+                        away_team_id: newHomeId === formData.away_team_id ? '' : formData.away_team_id
+                      });
+                    }}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  >
+                    <option value="">Sélectionner une équipe</option>
+                    {clubs.map((club) => (
+                      <option key={club.id} value={club.id}>
+                        {club.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Équipe extérieur</label>
-                <select
-                  value={formData.away_team_id}
-                  onChange={(e) => setFormData({ ...formData, away_team_id: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                >
-                  <option value="">Sélectionner une équipe</option>
-                  {clubs.map((club) => (
-                    <option key={club.id} value={club.id}>
-                      {club.name}
-                    </option>
-                  ))}
-                </select>
+                {editingMatch ? (
+                  <div className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100">
+                    {getMatchClubName(editingMatch, false)}
+                  </div>
+                ) : (
+                  <select
+                    value={formData.away_team_id}
+                    onChange={(e) => setFormData({ ...formData, away_team_id: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  >
+                    <option value="">Sélectionner une équipe</option>
+                    {clubs.filter(club => club.id !== formData.home_team_id).map((club) => (
+                      <option key={club.id} value={club.id}>
+                        {club.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Score domicile</label>

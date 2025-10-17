@@ -100,11 +100,11 @@ Route::prefix('v1')->group(function () {
     // Routes des clubs
     Route::get('/clubs', [ClubController::class, 'index']);
     Route::get('/clubs/{club}', [ClubController::class, 'show']);
-    
+
     // Routes des joueurs
     Route::get('/players', [PlayerController::class, 'index']);
     Route::get('/players/{player}', [PlayerController::class, 'show']);
-    
+
     // Routes des matchs
     Route::get('/matches', [MatchController::class, 'index']);
     Route::get('/matches/{match}', [MatchController::class, 'show']);

@@ -11,8 +11,10 @@ interface StandingFormData {
   losses: number;
   goals_for: number;
   goals_against: number;
+  goalDifference: number;
   points: number;
   competition: string;
+  form: ('W' | 'D' | 'L')[];
 }
 
 const StandingManagement: React.FC = () => {
@@ -21,6 +23,8 @@ const StandingManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingStanding, setEditingStanding] = useState<StandingEntry | null>(null);
+  const [selectedCompetition, setSelectedCompetition] = useState<string>('Ligue 1 Sénégalaise');
+  const [availableCompetitions, setAvailableCompetitions] = useState<string[]>([]);
   const [formData, setFormData] = useState<StandingFormData>({
     club_id: '',
     position: 1,
@@ -30,13 +34,15 @@ const StandingManagement: React.FC = () => {
     losses: 0,
     goals_for: 0,
     goals_against: 0,
+    goalDifference: 0,
     points: 0,
-    competition: 'Ligue 1',
+    competition: 'Ligue 1 Sénégalaise',
+    form: [],
   });
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedCompetition]);
 
   const loadData = async () => {
     try {
@@ -45,7 +51,14 @@ const StandingManagement: React.FC = () => {
         ApiService.getStandings(),
         ApiService.getClubs()
       ]);
-      setStandings(standingsData);
+
+      // Extraire les compétitions disponibles
+      const competitions = [...new Set(standingsData.map((standing: StandingEntry) => standing.competition))];
+      setAvailableCompetitions(competitions);
+
+      // Filtrer par compétition sélectionnée
+      const filteredStandings = standingsData.filter((standing: StandingEntry) => standing.competition === selectedCompetition);
+      setStandings(filteredStandings);
       setClubs(clubsData);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
@@ -82,8 +95,10 @@ const StandingManagement: React.FC = () => {
       losses: standing.losses,
       goals_for: standing.goals_for,
       goals_against: standing.goals_against,
+      goalDifference: standing.goalDifference,
       points: standing.points,
       competition: standing.competition,
+      form: standing.form,
     });
     setShowForm(true);
   };
@@ -102,7 +117,7 @@ const StandingManagement: React.FC = () => {
   const handleUpdateFromMatches = async () => {
     if (window.confirm('Cela va recalculer tous les classements basés sur les matchs terminés. Continuer ?')) {
       try {
-        await ApiService.updateStandingsFromMatches('Ligue 1');
+        await ApiService.updateStandingsFromMatches(selectedCompetition);
         loadData();
       } catch (error) {
         console.error('Erreur lors de la mise à jour automatique:', error);
@@ -120,8 +135,10 @@ const StandingManagement: React.FC = () => {
       losses: 0,
       goals_for: 0,
       goals_against: 0,
+      goalDifference: 0,
       points: 0,
       competition: 'Ligue 1',
+      form: [],
     });
   };
 
@@ -155,6 +172,25 @@ const StandingManagement: React.FC = () => {
             Ajouter une entrée
           </button>
         </div>
+      </div>
+
+      {/* Sélecteur de compétition */}
+      <div className="mb-6">
+        <label htmlFor="competition-select" className="block text-sm font-medium text-gray-700 mb-2">
+          Compétition:
+        </label>
+        <select
+          id="competition-select"
+          value={selectedCompetition}
+          onChange={(e) => setSelectedCompetition(e.target.value)}
+          className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        >
+          {availableCompetitions.map((competition) => (
+            <option key={competition} value={competition}>
+              {competition}
+            </option>
+          ))}
+        </select>
       </div>
 
       {showForm && (
@@ -394,7 +430,7 @@ const StandingManagement: React.FC = () => {
                           {standing.club?.name || 'Club inconnu'}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {standing.club?.short_name}
+                          {standing.club?.shortName}
                         </div>
                       </div>
                     </div>
